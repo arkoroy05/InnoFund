@@ -51,6 +51,7 @@ const page = () => {
           Sign Up
         </button>
       </SignUpButton>
+      
     </div>
   )
 }
