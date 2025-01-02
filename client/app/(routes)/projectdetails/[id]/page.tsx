@@ -21,9 +21,9 @@ const Page = ({ params }: { params: { id: string } }) => {
     "Brown, A. (2023). 'The Impact of IoT on Modern Agriculture', Tech in Farming Quarterly, 8(1), 112-128."
   ]
   const links = [
-    { name: "Project Website", url: "https://ecoharvest.example.com" },
-    { name: "Research Paper", url: "https://example.com/ecoharvest-research.pdf" },
-    { name: "Partner Organizations", url: "https://example.com/partners" }
+    { name: "Project Website", url: "https:google.com" },
+    { name: "Research Paper", url: "https:google.com" },
+    { name: "Partner Organizations", url: "hhttps:google.com" }
   ]
   const teamMembers = [
     { name: "Dr. Emily Green", role: "Project Lead", avatarUrl: "/placeholder.svg?height=100&width=100" },
@@ -34,11 +34,11 @@ const Page = ({ params }: { params: { id: string } }) => {
   const { displayText, isExpanded, toggleReadMore, shouldShowReadMore } = useReadMore(projectDescription, 200)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 to-black p-8">
+    <div className="min-h-screen bg-black p-8">
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-2">
-            <h1 className="text-4xl font-bold mb-6 text-black">{projectName}</h1>
+            <h1 className="text-4xl font-bold mb-6 text-white">{projectName}</h1>
             <Card className="mb-8">
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4 text-black">Project Description</h2>
