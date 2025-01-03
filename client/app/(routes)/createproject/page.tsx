@@ -1,9 +1,11 @@
-import React from 'react'
+import CreateProject from "./create-project"
 
-const page = () => {
+export default function CreateProjectPage() {
   return (
-    <div>page</div>
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
+      <CreateProject />
+    </div>
   )
 }
 
-export default page
