@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +29,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { FileUpload } from "@/components/ui/file-upload";
+import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
@@ -67,12 +69,40 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function CreateProjectForm() {
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+};
+
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const [teamMembers, setTeamMembers] = useState([""]);
   const [links, setLinks] = useState([""]);
   const [pdfs, setPdfs] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUserId(user.uid);
+        console.log("User ID:", user.uid);
+      } else {
+        setUserId(null);
+      }
+    });
+  
+    // Cleanup subscription
+    return () => unsubscribe();
+  });
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,94 +117,50 @@ export default function CreateProjectForm() {
       pdfs: [],
     },
   });
-
   async function onSubmit(values: FormValues) {
-    try {
-      setIsSubmitting(true);
-      setError(null);
-
-      // Create FormData object
-      const formData = new FormData();
-
-      // Add all regular form fields
-      formData.append("name", values.name);
-      formData.append("about", values.about);
-      // Filter out empty team members
-      const filteredTeamMembers = values.teamMembers.filter(
-        (member) => member.trim() !== ""
-      );
-      filteredTeamMembers.forEach((member) =>
-        formData.append("teamMembers[]", member)
-      );
-      formData.append("timeline", values.timeline.toISOString());
-
-      // Filter out empty links
-      if (values.links) {
-        const filteredLinks = values.links.filter((link) => link.trim() !== "");
-        filteredLinks.forEach((link) => formData.append("links[]", link));
-      }
-
-      // Only append citations if it exists
-      if (values.citations) {
-        formData.append("citations", values.citations);
-      }
-
-      formData.append("goalAmount", values.goalAmount.toString());
-
-      // Add PDF files with proper error handling
-      for (let i = 0; i < pdfs.length; i++) {
-        const pdf = pdfs[i];
-        if (pdf.size > MAX_FILE_SIZE) {
-          throw new Error(`File ${pdf.name} exceeds the 5MB size limit`);
-        }
-        if (!ACCEPTED_FILE_TYPES.includes(pdf.type)) {
-          throw new Error(`File ${pdf.name} is not a PDF`);
-        }
-        formData.append(`pdfs[]`, pdf);
-      }
-      const requestBody = {
-        name: values.name,
-        about: values.about,
-        teamMembers: values.teamMembers.filter(
-          (member) => member.trim() !== ""
-        ),
-        timeline: values.timeline.toISOString(),
-        links: values.links
-          ? values.links.filter((link) => link.trim() !== "")
-          : [],
-        citations: values.citations || "",
-        goalAmount: values.goalAmount,
-        pdfs: pdfs.map((pdf) => ({
-          name: pdf.name,
-          size: pdf.size,
-          type: pdf.type,
-        })),
-      };
-
-      // Submit to API with proper error handling
-      const response = await axios
-        .post("/api/projects", requestBody)
-        .catch((error) => {
-          console.error("Failed to create project:", error);
-          throw error;
-        });
-
-      if (response.status !== 200) {
-        throw new Error("Failed to create project");
-      }
-
-      // Redirect on success
-      router.push("/projects");
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to create project:", error);
-      setError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
-    } finally {
-      setIsSubmitting(false);
+    console.log("Form submission started");
+    console.log("Current userId:", userId);
+    
+    if (!userId) {
+        setError("User must be logged in to create a project");
+        console.log("No userId found");
+        return;
     }
-  }
+
+    try {
+        setIsSubmitting(true);
+        setError(null);
+
+        const requestBody = {
+            name: values.name,
+            about: values.about,
+            teamMembers: values.teamMembers.filter(member => member.trim() !== ""),
+            userId: userId,
+            timeline: values.timeline.toISOString(),
+            links: values.links ? values.links.filter(link => link.trim() !== "") : [],
+            citations: values.citations || "",
+            goalAmount: values.goalAmount,
+            pdfs: pdfs.map(pdf => ({
+                name: pdf.name,
+                size: pdf.size,
+                type: pdf.type,
+            })),
+        };
+
+        console.log("Request body:", requestBody);
+
+        const response = await axios.post("/api/projects", requestBody);
+        console.log("Response:", response);
+
+        router.push("/projects");
+        router.refresh();
+    } catch (error) {
+        console.error("Submission error:", error);
+        setError(error instanceof Error ? error.message : "An unexpected error occurred");
+    } finally {
+        setIsSubmitting(false);
+    }
+}
 
   const addTeamMember = () => {
     setTeamMembers([...teamMembers, ""]);

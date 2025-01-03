@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp } from "firebase/app";
-import { collection, addDoc, getFirestore } from "firebase/firestore";
-import { getDatabase } from "firebase/database";
+import { getDatabase, ref, push, set } from "firebase/database";
 
 
 const firebaseConfig = {
@@ -10,41 +9,46 @@ const firebaseConfig = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-  };
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+};
 
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
 
-  const firebaseApp = initializeApp(firebaseConfig);
-  const db=getFirestore(firebaseApp)
-
-
-  export async function POST(request:NextRequest){
-    if (!request.body) {
-        return NextResponse.json({ error: "Request body is required" }, { status: 400 });
-    }
-    
+export async function POST(request: NextRequest) {
     const body = await request.json();
     
-    // Validate the body has required fields
-    if (!body.name || !body.about) {
+    if (!body.name || !body.about || !body.userId) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
     
     try {
-        const docRef = await addDoc(collection(db,"projects"), {
+        const projectsRef = ref(db, 'projects');
+        const newProjectRef = push(projectsRef);
+        
+        const projectData = {
             name: body.name,
             about: body.about,
+            userId:body.userId, // Add userId to link project with user
+            createdAt: Date.now(),
             teamMembers: body.teamMembers || [],
             timeline: body.timeline || "",
             links: body.links || [],
-            citations: body.citations || [],
+            citations: body.citations || "",
             goalAmount: body.goalAmount || 0,
             pdfs: body.pdfs || []
-        });
+        };
+
+        await set(newProjectRef, projectData);
+        
+        // Also update user's projects
+        const userProjectRef = ref(db, `users/${body.userId}/projects/${newProjectRef.key}`);
+        await set(userProjectRef, true);
         
         return NextResponse.json({
-            id: docRef.id,
-            ...body
+            id: newProjectRef.key,
+            ...projectData
         });
     } catch(error) {
         return NextResponse.json({ error: "Error adding document" }, { status: 500 });

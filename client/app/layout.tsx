@@ -18,12 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+
     <html lang="en" className={inter.variable}>
       <body className="dark bg-backgroundtext-foreground font-sans">
         {children}
       </body>
     </html>
-    </ClerkProvider>
   );
 }
