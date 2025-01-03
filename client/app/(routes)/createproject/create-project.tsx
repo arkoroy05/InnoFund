@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+
 import * as z from "zod";
 import { CalendarIcon, PlusCircle, X, Paperclip, UserRoundPlus, Link } from "lucide-react";
 import { format } from "date-fns";
@@ -199,6 +200,8 @@ export default function CreateProjectForm() {
   };
 
   return (
+    <div className="p-14">
+
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex flex-col md:flex-row gap-8">
@@ -432,5 +435,6 @@ export default function CreateProjectForm() {
         </div>
       </form>
     </Form>
+    </div>
   );
 }
