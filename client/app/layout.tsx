@@ -31,9 +31,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+
     <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
-      <body className="dark bg-background text-foreground font-sans">
-        <Nav />
+      <body className="dark bg-background text-foreground">
+        <Nav></Nav>
         {children}
       </body>
     </html>

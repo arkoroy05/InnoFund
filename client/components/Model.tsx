@@ -23,13 +23,13 @@ export function Model() {
       <Text
         position={[0, 0, -1]}
         fontSize={viewport.width * 0.08}
-        color="#5b21b6"
+        color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        strokeWidth={0.02}
+        strokeWidth={0.008}
         strokeColor="#8b5cf6"
-        strokeOpacity={0.8}
-        fillOpacity={0.3}
+        strokeOpacity={1}
+        fillOpacity={0.9}
         font={"/fonts/CSCalebMono-Regular.otf"}
       >
         INNOFUND
