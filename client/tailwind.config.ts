@@ -58,6 +58,7 @@ export default {
   		},
 		fontFamily: {
 			sans: ["var(--font-inter)", "sans-serif"],
+			mono: ["var(--font-caleb)", "monospace"],
 		}
   	}
   },

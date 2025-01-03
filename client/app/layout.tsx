@@ -2,11 +2,24 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Inter } from 'next/font/google';
+import Nav from "@/components/Nav";
+import localFont from "next/font/local";
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
 });
+
+const Caleb = localFont({
+  src: [
+    {
+      path: 'fonts/CSCalebMono-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-caleb',
+})
 
 export const metadata: Metadata = {
   title: "Innofund",
@@ -19,8 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-    <html lang="en" className={inter.variable}>
-      <body className="dark bg-backgroundtext-foreground font-sans">
+    <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
+      <body className="dark bg-background text-foreground font-sans">
+        <Nav />
         {children}
       </body>
     </html>
