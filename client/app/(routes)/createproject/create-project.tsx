@@ -1,19 +1,18 @@
-'use client'
+"use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { CalendarIcon, PlusCircle, X, Paperclip, UserRoundPlus, Link } from "lucide-react";
+import { format } from "date-fns";
+import axios from "axios";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
-import { CalendarIcon, PlusCircle, X, Paperclip } from 'lucide-react'
-import { format } from 'date-fns'
-import axios from 'axios'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Calendar } from '@/components/ui/calendar'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -22,33 +21,36 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
+} from "@/components/ui/form";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
+} from "@/components/ui/popover";
+import { FileUpload } from "@/components/ui/file-upload";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: 'Project name must be at least 2 characters.',
+    message: "Project name must be at least 2 characters.",
   }),
   about: z.string().min(10, {
-    message: 'About section must be at least 10 characters.',
+    message: "About section must be at least 10 characters.",
   }),
   teamMembers: z.array(z.string()).min(1, {
-    message: 'Please add at least one team member.',
+    message: "Please add at least one team member.",
   }),
   timeline: z.date({
-    required_error: 'Please select a completion date.',
+    required_error: "Please select a completion date.",
   }),
-  links: z.array(z.string().url({ message: 'Please enter a valid URL.' })).optional(),
+  links: z
+    .array(z.string().url({ message: "Please enter a valid URL." }))
+    .optional(),
   citations: z.string().optional(),
   goalAmount: z.number().positive({
-    message: 'Goal amount must be a positive number.',
+    message: "Goal amount must be a positive number.",
   }),
   pdfs: z
     .array(
@@ -59,160 +61,142 @@ const formSchema = z.object({
       })
     )
     .optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 export default function CreateProjectForm() {
-  const router = useRouter()
-  const [teamMembers, setTeamMembers] = useState([''])
-  const [links, setLinks] = useState([''])
-  const [pdfs, setPdfs] = useState<File[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [teamMembers, setTeamMembers] = useState([""]);
+  const [links, setLinks] = useState([""]);
+  const [pdfs, setPdfs] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      about: '',
-      teamMembers: [''],
+      name: "",
+      about: "",
+      teamMembers: [""],
       timeline: new Date(),
-      links: [''],
-      citations: '',
+      links: [""],
+      citations: "",
       goalAmount: 0,
       pdfs: [],
     },
-  })
+  });
 
   async function onSubmit(values: FormValues) {
     try {
-      setIsSubmitting(true)
-      setError(null)
-      
+      setIsSubmitting(true);
+      setError(null);
+
       // Create FormData object
-      const formData = new FormData()
-      
+      const formData = new FormData();
+
       // Add all regular form fields
-      formData.append('name', values.name)
-      formData.append('about', values.about)
+      formData.append("name", values.name);
+      formData.append("about", values.about);
       // Filter out empty team members
-      const filteredTeamMembers = values.teamMembers.filter(member => member.trim() !== '')
-      filteredTeamMembers.forEach(member => formData.append('teamMembers[]', member))
-      formData.append('timeline', values.timeline.toISOString())
-      
+      const filteredTeamMembers = values.teamMembers.filter(
+        (member) => member.trim() !== ""
+      );
+      filteredTeamMembers.forEach((member) =>
+        formData.append("teamMembers[]", member)
+      );
+      formData.append("timeline", values.timeline.toISOString());
+
       // Filter out empty links
       if (values.links) {
-        const filteredLinks = values.links.filter(link => link.trim() !== '')
-        filteredLinks.forEach(link => formData.append('links[]', link))
+        const filteredLinks = values.links.filter((link) => link.trim() !== "");
+        filteredLinks.forEach((link) => formData.append("links[]", link));
       }
-      
+
       // Only append citations if it exists
       if (values.citations) {
-        formData.append('citations', values.citations)
+        formData.append("citations", values.citations);
       }
-      
-      formData.append('goalAmount', values.goalAmount.toString())
-      
+
+      formData.append("goalAmount", values.goalAmount.toString());
+
       // Add PDF files with proper error handling
       for (let i = 0; i < pdfs.length; i++) {
-        const pdf = pdfs[i]
+        const pdf = pdfs[i];
         if (pdf.size > MAX_FILE_SIZE) {
-          throw new Error(`File ${pdf.name} exceeds the 5MB size limit`)
+          throw new Error(`File ${pdf.name} exceeds the 5MB size limit`);
         }
         if (!ACCEPTED_FILE_TYPES.includes(pdf.type)) {
-          throw new Error(`File ${pdf.name} is not a PDF`)
+          throw new Error(`File ${pdf.name} is not a PDF`);
         }
-        formData.append(`pdfs[]`, pdf)
+        formData.append(`pdfs[]`, pdf);
       }
       const requestBody = {
         name: values.name,
         about: values.about,
-        teamMembers: values.teamMembers.filter(member => member.trim() !== ''),
+        teamMembers: values.teamMembers.filter(
+          (member) => member.trim() !== ""
+        ),
         timeline: values.timeline.toISOString(),
-        links: values.links ? values.links.filter(link => link.trim() !== '') : [],
-        citations: values.citations || '',
+        links: values.links
+          ? values.links.filter((link) => link.trim() !== "")
+          : [],
+        citations: values.citations || "",
         goalAmount: values.goalAmount,
-        pdfs: pdfs.map(pdf => ({
+        pdfs: pdfs.map((pdf) => ({
           name: pdf.name,
           size: pdf.size,
-          type: pdf.type
-        }))
-      }
-
+          type: pdf.type,
+        })),
+      };
 
       // Submit to API with proper error handling
-      const response = await axios.post('/api/projects', requestBody).catch(error => {
-        console.error('Failed to create project:', error)
-        throw error
-      })
+      const response = await axios
+        .post("/api/projects", requestBody)
+        .catch((error) => {
+          console.error("Failed to create project:", error);
+          throw error;
+        });
 
       if (response.status !== 200) {
-        throw new Error('Failed to create project')
+        throw new Error("Failed to create project");
       }
 
       // Redirect on success
-      router.push('/projects')
-      router.refresh()
-      
+      router.push("/projects");
+      router.refresh();
     } catch (error) {
-      console.error('Failed to create project:', error)
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
+      console.error("Failed to create project:", error);
+      setError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   const addTeamMember = () => {
-    setTeamMembers([...teamMembers, ''])
-  }
+    setTeamMembers([...teamMembers, ""]);
+  };
 
   const removeTeamMember = (index: number) => {
-    const newTeamMembers = teamMembers.filter((_, i) => i !== index)
-    setTeamMembers(newTeamMembers)
-  }
+    const newTeamMembers = teamMembers.filter((_, i) => i !== index);
+    setTeamMembers(newTeamMembers);
+  };
 
   const addLink = () => {
-    setLinks([...links, ''])
-  }
+    setLinks([...links, ""]);
+  };
 
   const removeLink = (index: number) => {
-    const newLinks = links.filter((_, i) => i !== index)
-    setLinks(newLinks)
-  }
+    const newLinks = links.filter((_, i) => i !== index);
+    setLinks(newLinks);
+  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files) {
-      const validFiles = Array.from(files).filter(
-        (file) =>
-          file.size <= MAX_FILE_SIZE && ACCEPTED_FILE_TYPES.includes(file.type)
-      )
-      setPdfs((prevPdfs) => [...prevPdfs, ...validFiles])
-      form.setValue(
-        'pdfs',
-        validFiles.map((file) => ({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-        }))
-      )
-    }
-  }
-
-  const removePdf = (index: number) => {
-    setPdfs((prevPdfs) => prevPdfs.filter((_, i) => i !== index))
-    form.setValue(
-      'pdfs',
-      pdfs
-        .filter((_, i) => i !== index)
-        .map((file) => ({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-        }))
-    )
-  }
+  const handleFileUpload = (files: File[]) => {
+    setPdfs(files);
+    console.log(files);
+  };
 
   return (
     <Form {...form}>
@@ -226,7 +210,11 @@ export default function CreateProjectForm() {
                 <FormItem>
                   <FormLabel>Project Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter project name" {...field} className="max-w-sm" />
+                    <Input
+                      placeholder="Enter project name"
+                      {...field}
+                      className="max-w-sm"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -260,7 +248,10 @@ export default function CreateProjectForm() {
                   <FormControl>
                     <div className="space-y-2">
                       {teamMembers.map((member, index) => (
-                        <div key={index} className="flex items-center space-x-2">
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2"
+                        >
                           <Input
                             placeholder="Enter team member name"
                             value={member}
@@ -283,8 +274,12 @@ export default function CreateProjectForm() {
                       ))}
                     </div>
                   </FormControl>
-                  <Button type="button" variant="outline" onClick={addTeamMember}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addTeamMember}
+                  >
+                    <UserRoundPlus className="h-4 w-4" />
                     Add Team Member
                   </Button>
                   <FormMessage />
@@ -303,7 +298,9 @@ export default function CreateProjectForm() {
                       <FormControl>
                         <Button
                           variant={"outline"}
-                          className={`w-[240px] pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                          className={`w-[240px] pl-3 text-left font-normal ${
+                            !field.value && "text-muted-foreground"
+                          }`}
                         >
                           {field.value ? (
                             format(field.value, "PPP")
@@ -340,15 +337,18 @@ export default function CreateProjectForm() {
                   <FormControl>
                     <div className="space-y-2">
                       {links.map((link, index) => (
-                        <div key={index} className="flex items-center space-x-2">
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2"
+                        >
                           <Input
                             placeholder="https://example.com"
                             value={link}
                             onChange={(e) => {
-                              const newLinks = [...links]
-                              newLinks[index] = e.target.value
-                              setLinks(newLinks)
-                              field.onChange(newLinks.filter(Boolean))
+                              const newLinks = [...links];
+                              newLinks[index] = e.target.value;
+                              setLinks(newLinks);
+                              field.onChange(newLinks.filter(Boolean));
                             }}
                           />
                           <Button
@@ -364,7 +364,7 @@ export default function CreateProjectForm() {
                     </div>
                   </FormControl>
                   <Button type="button" variant="outline" onClick={addLink}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
+                    <Link className="h-4 w-4" />
                     Add Link
                   </Button>
                   <FormMessage />
@@ -414,52 +414,23 @@ export default function CreateProjectForm() {
             <FormField
               control={form.control}
               name="pdfs"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Attach PDFs</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <Input
-                        type="file"
-                        accept=".pdf"
-                        multiple
-                        onChange={handleFileChange}
-                      />
-                      {pdfs.map((pdf, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Paperclip className="h-4 w-4" />
-                          <span className="text-sm truncate">{pdf.name}</span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => removePdf(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Attach relevant PDF documents (max 5MB each)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              render={({ field }) => <>
+              <FormItem>
+                <FormLabel>Attach PDFs</FormLabel>
+                <FormControl>
+                  <FileUpload onChange={handleFileUpload} Form={form}></FileUpload>
+                </FormControl>
+              </FormItem>
+              <FormMessage/>
+              </>}
+            ></FormField>
 
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Publishing...' : 'Publish Project'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Publishing..." : "Publish Project"}
             </Button>
           </div>
         </div>
       </form>
     </Form>
-  )
+  );
 }
-
