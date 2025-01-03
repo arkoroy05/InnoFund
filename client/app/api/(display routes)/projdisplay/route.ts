@@ -16,20 +16,28 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 
 export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const projectKey = searchParams.get('key');
+    
+    if (!projectKey) {
+        return NextResponse.json({ error: "Project key is required" }, { status: 400 });
+    }
+
     try {
-        const projectsRef = ref(db, 'projects');
-        const snapshot = await get(projectsRef);
+        const projectRef = ref(db, `projects/${projectKey}`);
+        const snapshot = await get(projectRef);
         
-        if (snapshot.exists()) {
-            const projects = Object.entries(snapshot.val()).map(([id, data]) => ({
-                id,
-                ...data
-            }));
-            return NextResponse.json(projects);
+        if (!snapshot.exists()) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
         }
         
-        return NextResponse.json([]);
+        const projectData = {
+            id: projectKey,
+            ...snapshot.val()
+        };
+        
+        return NextResponse.json(projectData);
     } catch (error) {
-        return NextResponse.json({ error: "Error fetching projects" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 });
     }
 }

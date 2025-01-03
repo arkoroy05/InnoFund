@@ -31,13 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-    <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
-      <body className="dark bg-background text-foreground font-sans">
-        <Nav />
+
+    <html lang="en" className={inter.variable}>
+      <body className="dark bg-backgroundtext-foreground font-sans">
         {children}
       </body>
     </html>
-    </ClerkProvider>
   );
 }

@@ -1,29 +1,36 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import { useAuth, UserButton, useUser } from '@clerk/nextjs'
 import ResearchFundingCard from '@/components/Card'
 import Link from 'next/link'
-import axios from 'axios'
+
+
+
 
 const page = () => {
-  const { user } = useUser()
+ 
   const[data,setData]=useState([])
   useEffect(() => {
-    if(user){
-      axios.get("/api/feed").then((res) => {
-        setData(res.data)
-      })
-    }
-  })
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/feed');
+        const projects = await response.json();
+        setData(projects);
+        console.log(projects)
+      } catch (error) {
+        console.log('Error fetching projects:', error);
+      }
+    };
+  
+    fetchProjects();
+  }, []);
+  
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-gray-900 to-black text-white'>
       <div className='container mx-auto px-4 py-6'>
         <div className='flex justify-between items-center mb-8'>
           <h1 className='text-2xl font-bold'>
-            Welcome, {user?.firstName} 👋
           </h1>
-          <UserButton />
         </div>
 
         {/* the card component will go here*/}
