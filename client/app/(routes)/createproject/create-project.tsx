@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
+import { Label } from "@/components/ui/label";
 import * as z from "zod";
 import { CalendarIcon, PlusCircle, X, Paperclip, UserRoundPlus, Link } from "lucide-react";
 import { format } from "date-fns";
@@ -88,6 +88,7 @@ export default function CreateProjectForm() {
   const [pdfs, setPdfs] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [citations, setCitations] = useState(['']);
   
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -103,6 +104,12 @@ export default function CreateProjectForm() {
     return () => unsubscribe();
   });
 
+  const addCitation = () => setCitations([...citations, ''])
+  const removeCitation = (index: number) => {
+    const newCitations = citations.filter((_, i) => i !== index)
+    setCitations(newCitations)
+  }
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -112,7 +119,7 @@ export default function CreateProjectForm() {
       teamMembers: [""],
       timeline: new Date(),
       links: [""],
-      citations: "",
+      citations: [""],
       goalAmount: 0,
       pdfs: [],
     },
@@ -361,23 +368,33 @@ export default function CreateProjectForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="citations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Citations</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add your citations here"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+             <div className="space-y-2">
+
+        <Label>Citations</Label>
+        {citations.map((citation, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            <Input
+              placeholder={`Citation ${index + 1}`}
+              value={citation}
+              onChange={(e) => {
+                const newCitations = [...citations]
+                newCitations[index] = e.target.value
+                setCitations(newCitations)
+              }}
+              required
             />
+            {index > 0 && (
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeCitation(index)}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={addCitation}>
+          <PlusCircle className="h-4 w-4 mr-2" /> Add Citation
+        </Button>
+      </div>
+
 
             <FormField
               control={form.control}
