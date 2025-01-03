@@ -22,14 +22,14 @@ const page = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+    <div className="min-h-screen ">
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold"></h1>
         </div>
 
         {/* the card component will go here*/}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 auto-rows-min">
           {data.map((item: any) => (
             <Link href={`/projectdetails/${item.id}`} key={item.id}>
               <ResearchFundingCard

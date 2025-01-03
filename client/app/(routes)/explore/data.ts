@@ -1,0 +1,68 @@
+const data = [
+  {
+    id: 1,
+    name: "Nexthire",
+    field: "Web Development",
+    desc: "Nexthire is a web3 based DeFi application for research papers. It's a platform that allows researchers to raise funds for their research projects in a decentralized manner.",
+    timeline: "Timeline 1",
+    potentialImpact: "Potential Impact 1",
+    teamSize: 1,
+    author: {
+      name: "Mohikshit Ghorai",
+      credentials: "0xAbCdEf0123456789",
+    },
+    currentFunding: 1,
+    goalFunding: 1,
+    backers: 1,
+    daysLeft: 1,
+  },
+  {
+    id: 2,
+    name: "Project 2",
+    field: "Field 2",
+    timeline: "Timeline 2",
+    potentialImpact: "Potential Impact 2",
+    teamSize: 2,
+    author: {
+      name: "Author 2",
+      credentials: "Credentials 2",
+    },
+    currentFunding: 2,
+    goalFunding: 2,
+    backers: 2,
+    daysLeft: 2,
+  },
+  {
+    id: 3,
+    name: "Project 3",
+    field: "Field 3",
+    timeline: "Timeline 3",
+    potentialImpact: "Potential Impact 3",
+    teamSize: 3,
+    author: {
+      name: "Author 3",
+      credentials: "Credentials 3",
+    },
+    currentFunding: 1,
+    goalFunding: 3,
+    backers: 3,
+    daysLeft: 3,
+  },
+  {
+    id: 4,
+    name: "Project 4",
+    field: "Field 4",
+    timeline: "Timeline 4",
+    potentialImpact: "Potential Impact 4",
+    teamSize: 4,
+    author: {
+      name: "Author 4",
+      credentials: "Credentials 4",
+    },
+    currentFunding: 4,
+    goalFunding: 4,
+    backers: 4,
+    daysLeft: 4,
+  }]
+
+export default data;

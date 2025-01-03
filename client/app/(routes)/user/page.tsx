@@ -92,7 +92,7 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 items-center p-8">
+    <div className="flex flex-col gap-6 items-center p-8 top-[3.5rem] relative">
       <form className="w-full max-w-md space-y-4">
         <input
           type="email"

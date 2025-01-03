@@ -195,7 +195,7 @@ export default function CreateProjectForm() {
 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col gap-8">
           <div className="flex-1 space-y-8">
             <FormField
               control={form.control}
@@ -207,7 +207,7 @@ export default function CreateProjectForm() {
                     <Input
                       placeholder="Enter project name"
                       {...field}
-                      className="max-w-sm"
+                      className=""
                     />
                   </FormControl>
                   <FormMessage />
@@ -414,7 +414,7 @@ export default function CreateProjectForm() {
             />
           </div>
 
-          <div className="w-full md:w-64 space-y-8">
+          <div className="w-full md:w-64 space-y-8 ">
             <FormField
               control={form.control}
               name="pdfs"

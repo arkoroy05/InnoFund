@@ -6,10 +6,6 @@ import React,{useState} from 'react'
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-
-
-
-
 const page = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
