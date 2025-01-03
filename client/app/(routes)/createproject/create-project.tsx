@@ -186,7 +186,7 @@ export default function CreateProjectForm() {
   };
 
   return (
-    <div className="p-14">
+    <div className="">
 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

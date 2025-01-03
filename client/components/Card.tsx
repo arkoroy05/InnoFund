@@ -41,7 +41,7 @@ export default function ResearchFundingCard({
     const fundedPercentage = Math.round(progress)
   return (
     <Card 
-    className="w-full max-w-md overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105 bg-gradient-to-br from-green-900 to-black dark:from-gray-800 dark:to-gray-900"
+    className="w-full max-w-md overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105"
     onMouseEnter={() => setIsHovered(true)}
     onMouseLeave={() => setIsHovered(false)}
   >
