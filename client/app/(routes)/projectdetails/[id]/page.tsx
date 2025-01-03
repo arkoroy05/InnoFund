@@ -1,6 +1,5 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { use } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useReadMore } from '@/hooks/useReadMore'
@@ -24,16 +23,15 @@ interface ProjectData {
   }>;
 }
 
-const Page = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params)
+const Page = ({ params }: { params: { id: string } }) => {
   const [data, setData] = useState<ProjectData | null>(null)
   const [isHovered, setIsHovered] = useState(false)
 
   useEffect(() => {
-    axios.get(`/api/projdisplay?key=${id}`)
+    axios.get(`/api/projdisplay?key=${params.id}`)
       .then((res) => setData(res.data))
       .catch((error) => console.error('Error fetching data:', error));
-  }, [id])
+  }, [params.id])
 
   const { displayText, isExpanded, toggleReadMore, shouldShowReadMore } = useReadMore(
     data?.about || "", 
@@ -70,23 +68,21 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
               </CardContent>
             </Card>
 
-            {Array.isArray(data.teamMembers) && data.teamMembers.length > 0 && (
-              <Card className="mb-8">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4 text-green-700">Team Members</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {data.teamMembers.map((member, index) => (
-                      <Team 
-                        key={index} 
-                        name={member}
-                        role="Team Member"
-                        avatarUrl="/placeholder.svg?height=100&width=100"
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4 text-green-700">Team Members</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {data.teamMembers.map((member, index) => (
+                    <Team 
+                      key={index} 
+                      name={member}
+                      role="Team Member"
+                      avatarUrl="/placeholder.svg?height=100&width=100"
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             {data.citations && (
               <Card className="mb-8">
@@ -99,7 +95,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
               </Card>
             )}
 
-            {Array.isArray(data.pdfs) && data.pdfs.length > 0 && (
+            {data.pdfs && data.pdfs.length > 0 && (
               <Card className="mb-8">
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-4 text-green-700">Attached Documents</h2>
@@ -129,7 +125,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
                 Donate {data.goalAmount} AVAX
               </Button>
 
-              {Array.isArray(data.links) && data.links.length > 0 && (
+              {data.links && data.links.length > 0 && (
                 <Card>
                   <CardContent className="p-6">
                     <h2 className="text-xl font-semibold mb-4 text-green-700">Relevant Links</h2>

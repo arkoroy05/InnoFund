@@ -2,76 +2,70 @@
 
 import { getAuth, signInWithPopup, GithubAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation'
-import React,{useState} from 'react'
+import React, { useState } from 'react'
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 
-
-
-
-const page = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-    };
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+};
 
-
-    const firebaseApp = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const db = getFirestore(firebaseApp);
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore(firebaseApp);
+const Page = () => {
     const router = useRouter();
-  
-    const handleEmailSignIn = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        const user = result.user;
-  
-        // Store user data in Firestore
-        const userRef = doc(db, 'users', user.uid);
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email,
-          createdAt: new Date(),
-          lastLogin: new Date()
-        }, { merge: true });
-  
-        router.push('/feed');
-      } catch (error) {
-        console.error("Error signing in with email:", error);
-      }
-    };
-  
-    const handleEmailSignUp = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        const user = result.user;
-  
-        // Store user data in Firestore
-        const userRef = doc(db, 'users', user.uid);
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email,
-          projects: {},
-          createdAt: new Date(),
-          lastLogin: new Date()
-        });
-  
-        router.push('/feed');
-      } catch (error) {
-        console.error("Error signing up with email:", error);
-      }
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-const handleGithubSignIn = async () => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        createdAt: new Date(),
+        lastLogin: new Date()
+      }, { merge: true });
+
+      router.push('/feed');
+    } catch (error) {
+      console.error("Error signing in with email:", error);
+    }
+  };
+
+  const handleEmailSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        projects: {},
+        createdAt: new Date(),
+        lastLogin: new Date()
+      });
+
+      router.push('/feed');
+    } catch (error) {
+      console.error("Error signing up with email:", error);
+    }
+  };
+
+  const handleGithubSignIn = async () => {
     const provider = new GithubAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -79,7 +73,6 @@ const handleGithubSignIn = async () => {
       const token = credential?.accessToken;
       const user = result.user;
 
-      // Store user data in Firestore
       const userRef = doc(db, 'users', user.uid);
       await setDoc(userRef, {
         uid: user.uid,
@@ -87,7 +80,7 @@ const handleGithubSignIn = async () => {
         displayName: user.displayName,
         photoURL: user.photoURL,
         githubToken: token,
-        projects:{},
+        projects: {},
         createdAt: new Date(),
         lastLogin: new Date()
       }, { merge: true });
@@ -97,7 +90,7 @@ const handleGithubSignIn = async () => {
       console.error("Error signing in with GitHub:", error);
     }
   };
- 
+
   return (
     <div className="flex flex-col gap-6 items-center p-8">
       <form className="w-full max-w-md space-y-4">
@@ -137,7 +130,6 @@ const handleGithubSignIn = async () => {
         <div className="flex-1 border-t border-gray-300"></div>
       </div>
 
-      {/* Existing GitHub button remains the same */}
       <button 
         onClick={handleGithubSignIn}
         className="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
@@ -150,6 +142,5 @@ const handleGithubSignIn = async () => {
     </div>
   );
 };
-}
 
-export default page;
+export default Page;

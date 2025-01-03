@@ -32,8 +32,6 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { getAuth } from 'firebase/auth';
 import { initializeApp } from "firebase/app";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
 const formSchema = z.object({
   name: z.string().min(2, {
