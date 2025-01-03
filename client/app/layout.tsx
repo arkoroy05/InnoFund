@@ -32,8 +32,9 @@ export default function RootLayout({
 }>) {
   return (
 
-    <html lang="en" className={inter.variable}>
-      <body className="dark bg-backgroundtext-foreground font-sans">
+    <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
+      <body className="dark bg-background text-foreground">
+        <Nav></Nav>
         {children}
       </body>
     </html>
