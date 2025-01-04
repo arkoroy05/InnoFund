@@ -148,7 +148,7 @@ export default function CreateProjectForm() {
       };
 
       await axios.post("/api/projects", requestBody);
-      router.push("/projects");
+      router.push("/explore");
       router.refresh();
     } catch (error) {
       console.error("Submission error:", error);

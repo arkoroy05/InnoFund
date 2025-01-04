@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { getAuth, signInWithPopup, GithubAuthProvider} from 'firebase/auth';
 import { useRouter } from 'next/navigation'
-import {useState} from 'react'
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
