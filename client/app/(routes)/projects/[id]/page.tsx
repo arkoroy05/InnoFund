@@ -79,7 +79,7 @@ const Page = ({ params }: { params: { id: string } }) => {
           </p>
           <div className="flex items-center gap-2">
             <Avatar>
-              <AvatarImage src="https://www.github.com/shadcn.png" />
+              <AvatarImage src={data.user.photoURL} />
               <AvatarFallback>
                 <AvatarImage src="/avalanche-avax-logo.svg" />
               </AvatarFallback>
