@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import React from 'react'
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -62,6 +64,7 @@ const Page = () => {
                 </svg>
                 Sign in with GitHub
             </button>
+            <ConnectButton />
         </div>
     );
 };

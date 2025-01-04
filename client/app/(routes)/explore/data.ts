@@ -1,3 +1,6 @@
+import { User } from "lucide-react";
+import { userAgent } from "next/server";
+
 const data = [
   {
     id: 1,
@@ -5,6 +8,7 @@ const data = [
     field: "Web Development",
     desc: "Nexthire is a web3 based DeFi application for research papers. It's a platform that allows researchers to raise funds for their research projects in a decentralized manner.",
     timePosted: "2021-07-21T15:45:30Z",
+    completionTime: "2025-07-21T15:45:30Z",
     potentialImpact: "Potential Impact 1",
     teamSize: 1,
     author: {
@@ -14,6 +18,7 @@ const data = [
     },
     currentFunding: 1,
     goalFunding: 1,
+    userAnonimity: true,
   },
   {
     id: 2,

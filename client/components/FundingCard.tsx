@@ -20,15 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Clock,
-  Users,
-  TrendingUp,
-  Award,
-  ChevronRight,
-  Clipboard,
-  Check
-} from "lucide-react";
+import { Clipboard, Check } from "lucide-react";
 import Image from "next/image";
 
 interface ResearchFundingCardProps {
@@ -37,8 +29,9 @@ interface ResearchFundingCardProps {
   desc: string;
   field: string;
   timeposted: Date;
+  completionTime: Date;
   primaryLink: string;
-  author?: {
+  author: {
     username: string;
     name: string;
     photoURL: string;
@@ -48,12 +41,14 @@ interface ResearchFundingCardProps {
   userAnonimity: boolean;
 }
 
-function formatDistanceToNow(date: Date): string {
+function formatDistanceToNow(date: Date | null): string {
+  if (!date || isNaN(date.getTime())) {
+    return "Indefinite";
+  }
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffYears = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365));
 
-  
   if (diffYears > 0) {
     return `${diffYears} years ago`;
   } else {
@@ -76,6 +71,32 @@ function formatDistanceToNow(date: Date): string {
     }
   }
 }
+export function formatTimeRemaining(endDate: Date | null): string {
+  if (!endDate || isNaN(endDate.getTime())) {
+    return "Indefinite";
+  }
+  console.log(endDate);
+  const now = new Date();
+  const diffMs = endDate.getTime() - now.getTime();
+
+  // Check if the date has passed
+  if (diffMs < 0) {
+    return "Ended";
+  }
+
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours === 0) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `${diffMinutes} minutes left`;
+    }
+    return `${diffHours} hours left`;
+  }
+
+  return `${diffDays} days left`;
+}
 
 export default function FundingCard({
   title,
@@ -83,98 +104,151 @@ export default function FundingCard({
   field,
   primaryLink,
   timeposted,
+  completionTime,
   author,
   currentFunding,
   goalFunding,
+  userAnonimity,
 }: ResearchFundingCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const progress = (currentFunding / goalFunding) * 100;
-  const fundedPercentage = Math.round(progress);
+  const user = {
+    username: userAnonimity ? "anonymous" : author?.username || "Anonymous",
+    name: userAnonimity ? "Anonymous" : author?.name || "Anonymous",
+    photoURL: userAnonimity
+      ? "https://avatars.githubusercontent.com/u/0"
+      : author?.photoURL || "https://avatars.githubusercontent.com/u/0",
+  };
   return (
     <>
-      <Card
-        className="w-full rounded-[0] border-neutral-700/20 hover:bg-neutral-900 flex justify-between flex-col"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <CardHeader className="">
-          <div className="flex items-center space-x-4 mb-2">
-            <Avatar>
-              <AvatarImage
-                src={author?.photoURL || `https://avatars.githubusercontent.com/${author?.username}?size=200`}
-                alt={`GitHub avatar for ${author?.username}`}
-              />
-              <AvatarFallback>
-                <AvatarImage src="/avalanche-avax-logo.svg" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col w-[calc(100%-4rem)]">
-              <span className="text-neutral-700">{author?.name}</span>
-              <span className="text-neutral-500 truncate items-center w-[calc(100%-4rem)] text-sm">
-                {author?.username}
-
-              </span>
-              <span className="text-neutral-500 text-sm">
-                <Button
+      <TooltipProvider>
+        <Card
+          className="w-full rounded-[0] border-neutral-700/20 hover:bg-neutral-900 flex justify-between flex-col"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <CardHeader className="">
+            <div className="flex items-center space-x-4 mb-2">
+              <Tooltip>
+                <TooltipTrigger>
+                  <Avatar>
+                    <AvatarImage
+                      src={
+                        user.photoURL ||
+                        `https://avatars.githubusercontent.com/${user.username}?size=200`
+                      }
+                      alt={`GitHub avatar for ${user.username}`}
+                    />
+                    <AvatarFallback>
+                      <AvatarImage src="/avalanche-avax-logo.svg" />
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent className="bg-neutral-900 text-white border border-neutral-700">
+                  {"Avatar for " + user.username}
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex flex-col w-[calc(100%-4rem)]">
+                <span className="text-neutral-700">{user.name}</span>
+                <span className="text-neutral-500 truncate items-center w-[calc(100%-4rem)] text-sm">
+                  {user?.username}
+                </span>
+                <span className="text-neutral-500 text-sm">
+                  <Button
                     variant="ghost"
                     className="h-4 hover:bg-transparent p-0 my-1"
                     onClick={() => {
-                      navigator.clipboard.writeText(author?.username!);
+                      navigator.clipboard.writeText(user.username!);
                       setIsCopied(true);
                       setTimeout(() => setIsCopied(false), 5000);
                     }}
                     disabled={isCopied}
                   >
                     {isCopied ? (
-                      <><Check className="size-4 text-green-500 " />Copied!</>
+                      <>
+                        <Check className="size-4 text-green-500 " />
+                        Copied!
+                      </>
                     ) : (
-                      <><Clipboard className="size-4" />Copy UserID</>
+                      <>
+                        <Clipboard className="size-4" />
+                        Copy UserID
+                      </>
                     )}
                   </Button>
-              </span>
+                </span>
+              </div>
+              <div className="text-neutral-500 text-sm"></div>
             </div>
-            <div className="text-neutral-500 text-sm"></div>
-          </div>
-          <a href={primaryLink} className="text-3xl truncate">
-            <CardTitle>{title}</CardTitle>
-          </a>
-          <CardDescription className="font-medium truncate text-xl text-neutral-700">
-            {field}
-          </CardDescription>
-          <CardDescription className="line-clamp-3">{desc}</CardDescription>
-        </CardHeader>
+            <Tooltip>
+              <a href={primaryLink} className="text-3xl truncate">
+                <TooltipTrigger>
+                  <CardTitle>{title}</CardTitle>
+                </TooltipTrigger>
+              </a>
 
-        <CardContent className="flex-col flex">
-          <div className="flex items-center space-x-4 w-full"></div>
-        </CardContent>
+              <TooltipContent className="bg-neutral-900 text-white border border-neutral-700">
+                {primaryLink === "/explore"
+                  ? `${title}`
+                  : `${title}:${primaryLink}`}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <CardDescription className="font-medium truncate text-xl text-neutral-700">
+                <TooltipTrigger>{field}</TooltipTrigger>
+              </CardDescription>
+              <TooltipContent className="bg-neutral-900 text-white border border-neutral-700">
+                {field}
+              </TooltipContent>
+            </Tooltip>
 
-        <CardFooter className="flex items-center flex-col justify-between">
-          <span className="text-neutral-700">
-            {formatDistanceToNow(new Date(timeposted))}
-          </span>
-          <div className="w-full">
-            <Progress value={progress} className="m-2"></Progress>
-            <div className="flex justify-between w-full">
-              <span className="text-neutral-700">
-                {currentFunding.toLocaleString()} AVAX
+            <Tooltip>
+              <TooltipTrigger className="text-left">
+                <CardDescription className="line-clamp-3 ">{desc}</CardDescription>
+              </TooltipTrigger>
+              <TooltipContent className="bg-neutral-900 text-white border border-neutral-700 max-w-[300px]">{desc}</TooltipContent>
+            </Tooltip>
+          </CardHeader>
+
+          <CardFooter className="flex items-center flex-col justify-between">
+            <span className="mb-2">
+              <span className="text-neutral-400 px-2 py-1 rounded-full bg-neutral-800">
+                {formatDistanceToNow(new Date(timeposted))}
+              </span>{" "}
+              {"\u2022"}{" "}
+              <span className="text-gray-300 border px-2 py-1 rounded-full bg-neutral-800">
+                {formatTimeRemaining(completionTime)}
               </span>
-              <span className="text-lime-700">
-                {goalFunding.toLocaleString()} AVAX
-              </span>
+            </span>
+            <div className="w-full">
+              <Progress value={progress} className="m-2"></Progress>
+              <div className="flex justify-between w-full">
+                <span className="text-neutral-600">
+                  {currentFunding.toLocaleString()} AVAX
+                </span>
+                <span className="text-lime-500">
+                  {goalFunding.toLocaleString()} AVAX
+                </span>
+              </div>
             </div>
-          </div>
-          <Button variant={"outline"} className="w-full my-2 py-5">
-            <Image
-              src="/avalanche-avax-logo.svg"
-              alt="Avalanche Logo"
-              width={15}
-              height={15}
-            />
-            Donate with AVAX
-          </Button>
-        </CardFooter>
-      </Card>
+            <Tooltip>
+              <TooltipTrigger className="w-full">
+                <Button variant={"outline"} className="w-full mt-2 mb-1 py-6">
+                  <Image
+                    src="/avalanche-avax-logo.svg"
+                    alt="Avalanche Logo"
+                    width={15}
+                    height={15}
+                  />
+                  Donate with AVAX
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Donate with AVAX</TooltipContent>
+            </Tooltip>
+          </CardFooter>
+        </Card>
+      </TooltipProvider>
     </>
   );
 }

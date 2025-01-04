@@ -4,6 +4,10 @@ import "./globals.css";
 import { Inter } from 'next/font/google';
 import Nav from "@/components/Nav";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
+import { cookieToInitialState } from "wagmi";
+import { getConfig } from "./config";
+import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,12 +34,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialState = cookieToInitialState(
+    getConfig(),
+    headers().get("cookie")
+  );
   return (
 
     <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
       <body className="dark bg-background text-foreground">
         <Nav></Nav>
-        {children}
+        <Providers initialState={initialState}>{children}</Providers>
       </body>
     </html>
   );
