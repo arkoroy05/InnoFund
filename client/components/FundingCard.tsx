@@ -131,12 +131,13 @@ export default function FundingCard({
       : author?.photoURL || "https://avatars.githubusercontent.com/u/0",
   };
   const router = useRouter();
+  const isWalletConnected = true;
   return (
     <>
       <TooltipProvider>
-        <Link href={`/projects/${id}`}>
+        <Link href={`/projects/${id}`} className="">
           <Card
-            className="w-full rounded-[0] border-neutral-700/20 hover:bg-neutral-900 flex justify-between flex-col"
+            className="w-full rounded-[0] border-neutral-700/20 hover:bg-neutral-900 flex justify-between flex-col h-full"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
@@ -243,7 +244,7 @@ export default function FundingCard({
               </div>
               <Tooltip>
                 <TooltipTrigger className="w-full">
-                  <Button variant={"outline"} className="w-full mt-2 mb-1 py-6">
+                  <Button variant={"outline"} className="w-full mt-2 mb-1 py-6" disabled={!isWalletConnected}>
                     <Image
                       src="/avalanche-avax-logo.svg"
                       alt="Avalanche Logo"
@@ -253,7 +254,9 @@ export default function FundingCard({
                     Donate with AVAX
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Donate with AVAX</TooltipContent>
+                <TooltipContent className="bg-neutral-900 text-white border border-neutral-700" >
+                  {!isWalletConnected ? "Donate with AVAX" : "Connect your wallet to donate"}
+                </TooltipContent>
               </Tooltip>
             </CardFooter>
           </Card>

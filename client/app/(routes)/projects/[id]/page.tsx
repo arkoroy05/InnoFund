@@ -1,11 +1,12 @@
-"use client"
-import { useEffect, useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { useReadMore } from '@/hooks/useReadMore'
-import { ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react'
-import { Team } from '@/components/Team'
-import axios from 'axios'
+"use client";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useReadMore } from "@/hooks/useReadMore";
+import { ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Team } from "@/components/Team";
+import axios from "axios";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ProjectData {
   name: string;
@@ -24,28 +25,43 @@ interface ProjectData {
 }
 
 const Page = ({ params }: { params: { id: string } }) => {
-  const [data, setData] = useState<ProjectData | null>(null)
-  const [isHovered, setIsHovered] = useState(false)
+  const [data, setData] = useState<ProjectData | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    axios.get(`/api/projdisplay?key=${params.id}`)
+    axios
+      .get(`/api/projdisplay?key=${params.id}`)
       .then((res) => setData(res.data))
-      .catch((error) => console.error('Error fetching data:', error));
-  }, [params.id])
+      .catch((error) => console.error("Error fetching data:", error));
+  }, [params.id]);
 
-  const { displayText, isExpanded, toggleReadMore, shouldShowReadMore } = useReadMore(
-    data?.about || "", 
-    200
-  )
+  const { displayText, isExpanded, toggleReadMore, shouldShowReadMore } =
+    useReadMore(data?.about || "", 200);
 
-  if (!data) return <div>Loading...</div>
+  if (!data) return <div>Loading...</div>;
 
   return (
     <>
-    <div className="relative top-[3.5rem] min-h-[calc(100vh-3.5rem)] border flex justify-center">
-      <div className="max-w-[80vh] bg-black border min-w-[20vh]">
-</div>
-    </div>  
+      <div className="relative top-[3.5rem] min-h-[calc(100vh-3.5rem)] border flex justify-center">
+        <div className="max-w-[85vw]  border-red-800 border min-w-[80vw]">
+          <h1 className="text-5xl font-bold">AcadZ</h1>
+          <p className="text-lg text-neutral-500">
+            {" "}
+            AcadZ is a web3 based DeFi application for research papers. It's a
+            platform that allows researchers to raise funds for their research
+            projects in a decentralized manner.
+          </p>
+          <div className="border border-sky-600 flex items-center">
+            <Avatar>
+              <AvatarImage src="https://www.github.com/shadcn.png" />
+              <AvatarFallback>
+                <AvatarImage src="/avalanche-avax-logo.svg" />
+              </AvatarFallback>
+            </Avatar>
+            <h2>Shadcn</h2>
+          </div>
+        </div>
+      </div>
     </>
     // <div className="min-h-screen bg-black p-8 relative top-[3.5rem]">
     //   <div className="max-w-4xl mx-auto">
@@ -79,8 +95,8 @@ const Page = ({ params }: { params: { id: string } }) => {
     //             <h2 className="text-xl font-semibold mb-4 text-green-700">Team Members</h2>
     //             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     //               {data.teamMembers.map((member, index) => (
-    //                 <Team 
-    //                   key={index} 
+    //                 <Team
+    //                   key={index}
     //                   name={member}
     //                   role="Team Member"
     //                   avatarUrl="/placeholder.svg?height=100&width=100"
@@ -158,7 +174,7 @@ const Page = ({ params }: { params: { id: string } }) => {
     //     </div>
     //   </div>
     // </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;
