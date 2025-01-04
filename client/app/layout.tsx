@@ -34,7 +34,6 @@ export default function RootLayout({
 
     <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
       <body className="dark bg-background text-foreground">
-        <Nav></Nav>
         {children}
       </body>
     </html>
