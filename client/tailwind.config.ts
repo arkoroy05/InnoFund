@@ -66,6 +66,12 @@ export default {
         sans: ["var(--font-inter)", "sans-serif"],
         mono: ["var(--font-caleb)", "monospace"],
       },
+      keyframes: {
+        "bg-position": {
+        "0%": { backgroundPosition: "0% 50%" },
+         "100%": { backgroundPosition: "100% 50%" },
+        }
+    }
     },
   },
   plugins: [
