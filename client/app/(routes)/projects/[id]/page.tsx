@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useReadMore } from "@/hooks/useReadMore";
-import { ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronUp, Download, FileIcon } from "lucide-react";
 import { Team } from "@/components/Team";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 interface ProjectData {
   name: string;
@@ -27,6 +28,7 @@ interface ProjectData {
 const Page = ({ params }: { params: { id: string } }) => {
   const [data, setData] = useState<ProjectData | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const isWalletConnected = true;
 
   useEffect(() => {
     axios
@@ -42,24 +44,127 @@ const Page = ({ params }: { params: { id: string } }) => {
 
   return (
     <>
-      <div className="relative top-[3.5rem] min-h-[calc(100vh-3.5rem)] border flex justify-center">
-        <div className="max-w-[85vw]  border-red-800 border min-w-[80vw]">
-          <h1 className="text-5xl font-bold">AcadZ</h1>
-          <p className="text-lg text-neutral-500">
+      <div className="relative top-[3.5rem] min-h-[calc(100vh-3.5rem)] flex justify-center">
+        <div className="max-w-[85vw] min-w-[80vw] my-5 flex gap-3 flex-col">
+          <h1 className="text-5xl font-bold flex items-center gap-2">
+            AcadZ{" "}
+            <span className="text-base font-light">
+              <a
+                href={data.links[0]}
+                className="flex items-center text-blue-600 hover:text-blue-800"
+              >
+                <ArrowUpRight className="h-4 w-4 mr-1" />
+                {data.links[0]}
+              </a>
+            </span>
+          </h1>
+          <p className="text-[1rem] text-neutral-500">
             {" "}
             AcadZ is a web3 based DeFi application for research papers. It's a
             platform that allows researchers to raise funds for their research
             projects in a decentralized manner.
           </p>
-          <div className="border border-sky-600 flex items-center">
+          <div className="flex items-center gap-2">
             <Avatar>
               <AvatarImage src="https://www.github.com/shadcn.png" />
               <AvatarFallback>
                 <AvatarImage src="/avalanche-avax-logo.svg" />
               </AvatarFallback>
             </Avatar>
-            <h2>Shadcn</h2>
+            <h2 className="text-neutral-400 text-[1.08rem]">Shadcn</h2>
           </div>
+          <div className="flex gap-4">
+            <div className="team-members">
+              {data.teamMembers && (
+                <>
+                  <h1 className="text-lg font-medium">Team Members</h1>
+                  {data.teamMembers.map((member, index) => (
+                    <p key={index} className="text-lime-600">
+                      {member}
+                    </p>
+                  ))}
+                </>
+              )}
+            </div>
+            <div className="citations">
+              {data.citations && (
+                <>
+                  <h1 className="text-lg font-medium">Citations</h1>{" "}
+                  {/* see this */}
+                  {data.citations?.map((citation, index) => (
+                    <p key={index} className="text-gray-500">
+                      {citation}
+                    </p>
+                  ))}
+                </>
+              )}
+            </div>
+            <div className="other-links border-neutral-800">
+              {data.links.length > 1 && (
+                <>
+                  <h1 className="text-lg font-medium">Other Relevant Links</h1>
+                  {data.links.slice(1, data.links.length).map((link, index) => (
+                    <a
+                      key={index}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 flex items-center"
+                    >
+                      {link}
+                      <ArrowUpRight className="ml-1 h-4 w-4" />
+                    </a>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+          <div className="pdfs flex flex-col gap-2">
+            {data.pdfs.length > 0 && (
+              <>
+                <h1 className="text-lg font-medium"> Relevant PDFs</h1>
+                {data.pdfs.map((pdf, index) => (
+                  <div key={index} className="flex items-center justify-between max-w-[800px] min-w-[200px] bg-neutral-900 rounded-lg p-2 border border-neutral-800">
+                    <div className="flex items-center gap-2">
+                      <FileIcon className="h-5 w-5 text-blue-500" />
+                      <div className="border border-neutral-800 p-2 py-1 rounded-lg">
+                        {pdf.name.length > 20 ? (
+                          <>{pdf.name.substring(0, 17)}...</>
+                        ) : (
+                          <>{pdf.name}</>
+                        )}
+                      </div>
+                    </div>
+                    <a
+                      href={pdf.name}
+                      download
+                      className="flex items-center"
+                    >
+                      <Button
+                        variant={"outline"}
+                        className="text-neutral-400"
+                      >
+                        <Download className="ml-1 h-4 w-4" /> Download
+                      </Button>
+                    </a>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+          <Button
+            variant={"outline"}
+            className="w-full mt-2 mb-1 py-6 max-w-[800px] min-w-[200px]"
+            disabled={!isWalletConnected}
+          >
+            <Image
+              src="/avalanche-avax-logo.svg"
+              alt="Avalanche Logo"
+              width={15}
+              height={15}
+            />
+            Donate with AVAX
+          </Button>
         </div>
       </div>
     </>
