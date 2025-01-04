@@ -4,14 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Label } from "@/components/ui/label";
 import * as z from "zod";
-import { CalendarIcon, UserRoundPlus, X } from "lucide-react";
+import { CalendarIcon, PlusCircle, X, Link, UserRoundPlus } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -20,40 +22,45 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { FileUpload } from "@/components/ui/file-upload";
 import { getAuth } from 'firebase/auth';
 import { initializeApp } from "firebase/app";
 
 const formSchema = z.object({
-  title: z.string().min(2, {
-    message: "Project title must be at least 2 characters.",
+  name: z.string().min(2, {
+    message: "Project name must be at least 2 characters.",
   }),
-  desc: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
+  about: z.string().min(10, {
+    message: "About section must be at least 10 characters.",
   }),
-  field: z.string().min(2, {
-    message: "Field of research is required.",
+  teamMembers: z.array(z.string().min(1, "Team member name cannot be empty")),
+  timeline: z.date({
+    required_error: "Please select a completion date.",
   }),
-  potentialImpact: z.string().min(10, {
-    message: "Potential impact description must be at least 10 characters.",
+  links: z.array(z.string().url({ message: "Please enter a valid URL." }))
+    .default([]),
+  citations: z.array(z.string())
+    .default([]),
+  goalAmount: z.number().positive({
+    message: "Goal amount must be a positive number.",
   }),
-  team: z.array(z.string().min(1, "Team member name cannot be empty")),
-  teamSize: z.number().min(1, {
-    message: "Team size must be at least 1.",
-  }),
-  currentFunding: z.number().default(0),
-  goalFunding: z.number().positive({
-    message: "Goal funding amount must be a positive number.",
-  }),
-  author: z.object({
-    username: z.string(),
-    name: z.string(),
-    credentials: z.string(),
-  }),
+  pdfs: z.array(
+    z.object({
+      name: z.string(),
+      size: z.number(),
+      type: z.string(),
+    })
+  ).default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function CreateResearchFundingForm() {
+export default function CreateProjectForm() {
   const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -85,19 +92,14 @@ export default function CreateResearchFundingForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      desc: "",
-      field: "",
-      potentialImpact: "",
-      team: [""],
-      teamSize: 1,
-      currentFunding: 0,
-      goalFunding: 0,
-      author: {
-        username: "",
-        name: "",
-        credentials: "",
-      },
+      name: "",
+      about: "",
+      teamMembers: [""],
+      timeline: new Date(),
+      links: [""],
+      citations: [""],
+      goalAmount: 0,
+      pdfs: [],
     },
   });
 
@@ -113,11 +115,12 @@ export default function CreateResearchFundingForm() {
 
       const cleanedValues = {
         ...values,
-        team: values.team.filter(member => member.trim() !== ""),
-        timeposted: new Date().toISOString(),
+        teamMembers: values.teamMembers.filter(member => member.trim() !== ""),
+        links: values.links.filter(link => link.trim() !== ""),
+        citations: values.citations.filter(citation => citation.trim() !== ""),
       };
 
-      if (cleanedValues.team.length === 0) {
+      if (cleanedValues.teamMembers.length === 0) {
         setError("At least one team member is required");
         return;
       }
@@ -125,9 +128,10 @@ export default function CreateResearchFundingForm() {
       const requestBody = {
         ...cleanedValues,
         userId,
+        timeline: values.timeline.toISOString(),
       };
 
-      await axios.post("/api/research-projects", requestBody);
+      await axios.post("/api/projects", requestBody);
       router.push("/projects");
       router.refresh();
     } catch (error) {
@@ -138,18 +142,35 @@ export default function CreateResearchFundingForm() {
     }
   }
 
+  const handleFileUpload = (files: File[]) => {
+    const fileData = files.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    }));
+    form.setValue("pdfs", fileData);
+  };
+
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
-            name="title"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Project Title</FormLabel>
+                <FormLabel>Project Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter research project title" {...field} />
+                  <Input placeholder="Enter project name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -158,13 +179,13 @@ export default function CreateResearchFundingForm() {
 
           <FormField
             control={form.control}
-            name="desc"
+            name="about"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Project Description</FormLabel>
+                <FormLabel>About Project</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Describe your research project"
+                    placeholder="Tell us about your project"
                     className="min-h-[100px]"
                     {...field}
                   />
@@ -176,39 +197,7 @@ export default function CreateResearchFundingForm() {
 
           <FormField
             control={form.control}
-            name="field"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Research Field</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter research field" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="potentialImpact"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Potential Impact</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Describe the potential impact of your research"
-                    className="min-h-[100px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="team"
+            name="teamMembers"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Team Members</FormLabel>
@@ -223,7 +212,6 @@ export default function CreateResearchFundingForm() {
                             const newValue = [...field.value];
                             newValue[index] = e.target.value;
                             field.onChange(newValue);
-                            form.setValue("teamSize", newValue.length);
                           }}
                         />
                         {field.value.length > 1 && (
@@ -234,7 +222,6 @@ export default function CreateResearchFundingForm() {
                             onClick={() => {
                               const newValue = field.value.filter((_, i) => i !== index);
                               field.onChange(newValue);
-                              form.setValue("teamSize", newValue.length);
                             }}
                           >
                             <X className="h-4 w-4" />
@@ -247,11 +234,7 @@ export default function CreateResearchFundingForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    const newValue = [...field.value, ""];
-                    field.onChange(newValue);
-                    form.setValue("teamSize", newValue.length);
-                  }}
+                  onClick={() => field.onChange([...field.value, ""])}
                   className="mt-2"
                 >
                   <UserRoundPlus className="h-4 w-4 mr-2" />
@@ -264,14 +247,153 @@ export default function CreateResearchFundingForm() {
 
           <FormField
             control={form.control}
-            name="goalFunding"
+            name="timeline"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Project Completion Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={`w-[240px] pl-3 text-left font-normal ${
+                          !field.value && "text-muted-foreground"
+                        }`}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date() || date > new Date("2100-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="links"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Funding Goal (AVAX)</FormLabel>
+                <FormLabel>Relevant Links</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    {field.value.map((link, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder="https://example.com"
+                          value={link}
+                          onChange={(e) => {
+                            const newValue = [...field.value];
+                            newValue[index] = e.target.value;
+                            field.onChange(newValue);
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            const newValue = field.value.filter((_, i) => i !== index);
+                            field.onChange(newValue);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => field.onChange([...field.value, ""])}
+                  className="mt-2"
+                >
+                  <Link className="h-4 w-4 mr-2" />
+                  Add Link
+                </Button>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="citations"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Citations</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    {field.value.map((citation, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder={`Citation ${index + 1}`}
+                          value={citation}
+                          onChange={(e) => {
+                            const newValue = [...field.value];
+                            newValue[index] = e.target.value;
+                            field.onChange(newValue);
+                          }}
+                        />
+                        {field.value.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const newValue = field.value.filter((_, i) => i !== index);
+                              field.onChange(newValue);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => field.onChange([...field.value, ""])}
+                  className="mt-2"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Citation
+                </Button>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="goalAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Goal Amount (AVAX)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="Enter funding goal amount"
+                    placeholder="Enter goal amount"
                     {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
@@ -281,53 +403,22 @@ export default function CreateResearchFundingForm() {
             )}
           />
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Author Information</h3>
-            <FormField
-              control={form.control}
-              name="author.username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter username" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="author.name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="author.credentials"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Credentials</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your credentials" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="pdfs"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Attach PDFs</FormLabel>
+                <FormControl>
+                  <FileUpload onChange={handleFileUpload} Form={form} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Publishing..." : "Publish Research Project"}
+            {isSubmitting ? "Publishing..." : "Publish Project"}
           </Button>
         </form>
       </Form>

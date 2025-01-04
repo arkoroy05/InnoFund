@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get } from "firebase/database";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,22 +15,39 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
+const firestore = getFirestore(firebaseApp);
 
 export async function GET(request: NextRequest) {
     try {
+        // Get projects from Realtime Database
         const projectsRef = ref(db, 'projects');
-        const snapshot = await get(projectsRef);
+        const projectsSnapshot = await get(projectsRef);
         
-        if (snapshot.exists()) {
-            const projects = Object.entries(snapshot.val()).map(([id, data]) => ({
-                id,
-                ...data
-            }));
-            return NextResponse.json(projects);
-        }
+        // Get users from Firestore
+        const usersCollection = collection(firestore, 'users');
+        const usersSnapshot = await getDocs(usersCollection);
         
-        return NextResponse.json([]);
+        const users = usersSnapshot.docs.map(doc => {
+            const userData = doc.data();
+            const userProjects = projectsSnapshot.exists() 
+                ? Object.entries(projectsSnapshot.val())
+                    .filter(([_, projectData]: [string, any]) => projectData.userId === doc.id)
+                    .map(([projectId, projectData]) => ({
+                        id: projectId,
+                        ...projectData
+                    }))
+                : [];
+
+            return {
+                id: doc.id,
+                ...userData,
+                projects: userProjects
+            };
+        });
+
+        return NextResponse.json(users);
+        
     } catch (error) {
-        return NextResponse.json({ error: "Error fetching projects" }, { status: 500 });
+        return NextResponse.json({ error: "Error fetching data" }, { status: 500 });
     }
 }
