@@ -25,7 +25,7 @@ interface Project {
   author: Author;
   currentFunding: number;
   goalAmount: number;
-  userAnonimity: boolean;
+  isAnonymous: boolean;
 }
 
 const ExplorePage = () => {
@@ -60,9 +60,7 @@ const ExplorePage = () => {
   }, [])
 
 
-  const projectClick = (project: Project) => {
-    
-  }
+
 
   if (isLoading) {
     return (
@@ -106,7 +104,7 @@ const ExplorePage = () => {
             currentFunding={project?.currentFunding || 0}
             primaryLink={project?.links[0] || "/explore"}
             goalFunding={project?.goalAmount || 0}
-            userAnonimity={project?.userAnonimity || false}
+            userAnonimity={project?.isAnonymous || false}
             completionTime={new Date(project?.timeline) || null}
           /> 
         ))}
