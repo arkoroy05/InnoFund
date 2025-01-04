@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import React from 'react'
 import FundingCard from '@/components/FundingCard'
 import { Search } from 'lucide-react'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 interface Author {
   username: string;
@@ -75,6 +76,10 @@ const ExplorePage = () => {
       <h1 className="text-4xl font-bold my-6 mx-20 flex items-center">
         Explore <Search className="h-8 w-8 mx-2" />
       </h1>
+      <div className='ml-20'>
+
+      <ConnectButton label="Connect Your Wallet" chainStatus="icon" showBalance={false} />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-20">
         {projects.map((project) => (
