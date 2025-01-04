@@ -1,98 +1,101 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { formatDate } from "@/lib/utils"
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import ProjectCard from "@/components/Project-Card"
-import ConnectWalletButton from "@/components/connect-web3-wallet"
-import { initializeApp } from "firebase/app"
-import { getDatabase, ref, get, child } from "firebase/database"
-import {toast} from "@/components/ui/toast"
-import { CardSpotlight } from '@/components/ui/card-spotlight'
-import AnimatedGradientText from '@/components/ui/gradient-text'
+import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/utils";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import ProjectCard from "@/components/Project-Card";
+import ConnectWalletButton from "@/components/connect-web3-wallet";
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, get, child } from "firebase/database";
+import { toast } from "@/components/ui/toast";
+import { CardSpotlight } from "@/components/ui/card-spotlight";
+import AnimatedGradientText from "@/components/ui/gradient-text";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 
 export default function ProfilePage() {
-  const [currentUser, setCurrentUser] = useState(null)
-  const [userProjects, setUserProjects] = useState([])
-  const [isWalletConnected, setIsWalletConnected] = useState(false)
-  const [isDeletingProject, setIsDeletingProject] = useState(false)
-  const auth = getAuth()
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userProjects, setUserProjects] = useState([]);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
+  const auth = getAuth();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user)
+        setCurrentUser(user);
         // Add these logs
-        console.log("Current user:", user)
-        const response = await fetch(`/api/profile?uid=${user.uid}`)
-        const data = await response.json()
-        console.log("API response data:", data)
-        setUserProjects(data.projects || [])
-        console.log("Projects after setting state:", data.projects)
+        console.log("Current user:", user);
+        const response = await fetch(`/api/profile?uid=${user.uid}`);
+        const data = await response.json();
+        console.log("API response data:", data);
+        setUserProjects(data.projects || []);
+        console.log("Projects after setting state:", data.projects);
       }
-    })
-    
-    return () => unsubscribe()
-}, [])
-
-const handleProjectDelete = async (projectId: number) => {
-  if (!currentUser || isDeletingProject) return;
-  
-  setIsDeletingProject(true)
-  
-  try {
-    console.log(currentUser.uid, projectId)
-    const response = await fetch(`/api/profile?uid=${currentUser.uid}&projectId=${projectId}`, {
-      method: 'DELETE',
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    return () => unsubscribe();
+  }, []);
 
-    const data = await response.json();
-    
-    if (data.success) {
-      setUserProjects(prevProjects => 
-        prevProjects.filter(project => project.id !== projectId)
+  const handleProjectDelete = async (projectId: number) => {
+    if (!currentUser || isDeletingProject) return;
+
+    setIsDeletingProject(true);
+
+    try {
+      console.log(currentUser.uid, projectId);
+      const response = await fetch(
+        `/api/profile?uid=${currentUser.uid}&projectId=${projectId}`,
+        {
+          method: "DELETE",
+        }
       );
-      toast({
-        title: "Success",
-        description: "Project successfully deleted",
-        variant: "default",
-      });
-    } else {
-      throw new Error('Failed to delete project');
-    }
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    toast({
-      title: "Error",
-      description: "Failed to delete project. Please try again.",
-      variant: "destructive",
-    });
-  } finally {
-    setIsDeletingProject(false);
-  }
-}
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUserProjects((prevProjects) =>
+          prevProjects.filter((project) => project.id !== projectId)
+        );
+        toast({
+          title: "Success",
+          description: "Project successfully deleted",
+          variant: "default",
+        });
+      } else {
+        throw new Error("Failed to delete project");
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingProject(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div className="relative top-[3.5rem]">
+      {/* <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <CardSpotlight>
@@ -121,8 +124,54 @@ const handleProjectDelete = async (projectId: number) => {
                 ))}
               </div>
           </CardSpotlight>
+        </div> */}
+      <div className="outsideContainer flex flex-col items-center justify-center mx-20 py-8 gap-3">
+        <div className="profile bg- w-full p-10 py-0 flex space-x-9">
+          <Avatar className="h-[calc(80%)] aspect-square w-auto border-2 border-stone-700 max-h-[20vh]">
+            <AvatarImage
+              src={
+                currentUser?.photoURL ||
+                `https://avatars.githubusercontent.com/${currentUser?.username}?size=200`
+              }
+              alt={`GitHub avatar for ${currentUser?.username}`}
+            />
+            <AvatarFallback>
+              <AvatarImage src="/avalanche-avax-logo.svg" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold text-white">
+              {currentUser?.displayName}
+            </h1>
+            <p className="text-[clamp(1.0rem,3vw,1.5rem)] font-light text-sm text-gray-500">
+              u/{currentUser?.reloadUserInfo.screenName}
+            </p>
+          </div>
+        </div>
+        <div className="projects bg- w-full flex flex-col">
+            <header className="p-10">
+              <h1 className="text-3xl font-bold">
+                Projects
+              </h1>
+            </header>
+            <main className="space-y-6 p-10 pt-0 flex flex-col ">
+              {userProjects.length > 0 ? (
+                userProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onDelete={handleProjectDelete}
+                  />
+                ))
+              ) : (
+                <div className="m-auto flex items-center justify-center -translate-x-[10%] -translate-y-[20%]">
+                  <img src="/empty.png" alt="" className="max-h-[20vw] max-w-[20vw] filter grayscale"/>
+                  <p className="text-2xl text-gray-500">No Projects</p>
+                </div>
+              )}
+            </main>
         </div>
       </div>
     </div>
-  )
+  );
 }
