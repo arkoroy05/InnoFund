@@ -38,7 +38,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   const { isConnected: isWalletConnected } = useAccount();
   const handleDonate = () => {
     if (isWalletConnected) {
-      router.push(`/payment?projectId=${params.id}`); // Route to /payment with projectId
+      router.push(`/payment/${params.id}`); // Route to /payment with projectId
     } else {
       router.push("/login");
     }
@@ -63,7 +63,7 @@ const Page = ({ params }: { params: { id: string } }) => {
       <div className="relative top-[3.5rem] min-h-[calc(100vh-3.5rem)] flex justify-center">
         <div className="max-w-[85vw] min-w-[80vw] my-5 flex gap-3 flex-col">
           <h1 className="text-5xl font-bold flex items-center gap-2">
-            AcadZ{" "}
+            {data.name}
             <span className="text-base font-light">
               <a
                 href={data.links[0]}
@@ -75,10 +75,7 @@ const Page = ({ params }: { params: { id: string } }) => {
             </span>
           </h1>
           <p className="text-[1rem] text-neutral-500">
-            {" "}
-            AcadZ is a web3 based DeFi application for research papers. It's a
-            platform that allows researchers to raise funds for their research
-            projects in a decentralized manner.
+            {data.about}
           </p>
           <div className="flex items-center gap-2">
             <Avatar>
@@ -87,7 +84,7 @@ const Page = ({ params }: { params: { id: string } }) => {
                 <AvatarImage src="/avalanche-avax-logo.svg" />
               </AvatarFallback>
             </Avatar>
-            <h2 className="text-neutral-400 text-[1.08rem]">Shadcn</h2>
+            <h2 className="text-neutral-400 text-[1.08rem]">{data.user.displayName}</h2>
           </div>
           <div className="flex gap-4">
             <div className="team-members">
@@ -168,6 +165,7 @@ const Page = ({ params }: { params: { id: string } }) => {
             variant={"outline"}
             className="w-full mt-2 mb-1 py-6 max-w-[800px] min-w-[200px]"
             disabled={!isWalletConnected}
+            onClick={handleDonate}
           >
             <Image
               src="/avalanche-avax-logo.svg"
