@@ -80,15 +80,16 @@ const ExplorePage = () => {
         {projects.map((project) => (
           <FundingCard
             key={Number(project.id)}
-            title={project.name}
-            field={project.designation}
-            desc={project.about || "No description provided."}
-            timeposted={new Date(project.timePosted)}
-            author={project.author}
-            currentFunding={project.currentFunding}
-            primaryLink={project.links[0] || "/explore"}
-            goalFunding={project.goalAmount}
-            userAnonimity={project.userAnonimity}
+            title={project?.name || "No title provided."}
+            field={project?.designation || "No field provided."}
+            desc={project?.about || "No description provided."}
+            timeposted={new Date(project?.createdAt) || null}
+            author={project?.author || "no author present"}
+            currentFunding={project?.currentFunding || 0}
+            primaryLink={project?.links[0] || "/explore"}
+            goalFunding={project?.goalAmount || 0}
+            userAnonimity={project?.userAnonimity || false}
+            completionTime={new Date(project?.timeline) || null}
           />
         ))}
       </div>
