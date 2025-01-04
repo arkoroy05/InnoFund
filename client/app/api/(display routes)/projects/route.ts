@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         const projectData = {
             name: body.name,
             about: body.about,
-            userId:body.userId, // Add userId to link project with user
+            userId:body.userId,
             createdAt: Date.now(),
             teamMembers: body.teamMembers || [],
             timeline: body.timeline || "",
@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
             citations: body.citations || "",
             designation: body.designation || "",
             goalAmount: body.goalAmount || 0,
-            pdfs: body.pdfs || []
+            pdfs: body.pdfs || [],
+            isAnonymous: body.isAnonymous || false,
         };
 
         await set(newProjectRef, projectData);
