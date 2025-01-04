@@ -73,7 +73,7 @@ export default function FundingCard({
         <CardHeader className="">
           <div className="flex items-center space-x-4 mb-2">
             <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarImage src="https://github.com/whiteninja.png" />
             </Avatar>
             <div className="flex flex-col w-[calc(100%-4rem)]">
               <span className="text-neutral-700">{author?.name}</span>
