@@ -51,7 +51,7 @@ const Landing = () => {
           lastLogin: new Date()
         }, { merge: true });
   
-        router.push('/choice');
+        router.push('/explore');
       } catch (error) {
         console.error("Error signing in with GitHub:", error);
       }
