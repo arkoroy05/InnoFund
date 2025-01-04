@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+// @ts-ignore
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import * as z from "zod";
@@ -28,7 +29,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { FileUpload } from "@/components/ui/file-upload";
-import { getAuth } from 'firebase/auth';
+import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 
 const formSchema = z.object({
@@ -45,20 +46,27 @@ const formSchema = z.object({
   timeline: z.date({
     required_error: "Please select a completion date.",
   }),
-  links: z.array(z.string().url({ message: "Please enter a valid URL." }))
+  links: z
+    .array(z.string().url({ message: "Please enter a valid URL." }))
     .default([]),
-  citations: z.array(z.string())
-    .default([]),
-  goalAmount: z.number().positive({
-    message: "Goal amount must be a positive number.",
-  }),
-  pdfs: z.array(
-    z.object({
-      name: z.string(),
-      size: z.number(),
-      type: z.string(),
+  citations: z.array(z.string()).default([]),
+  goalAmount: z
+    .number()
+    .positive({
+      message: "Goal amount must be a positive number.",
     })
-  ).default([]),
+    .max(10, {
+      message: "Goal amount cannot be greater than 10.",
+    }),
+  pdfs: z
+    .array(
+      z.object({
+        name: z.string(),
+        size: z.number(),
+        type: z.string(),
+      })
+    )
+    .default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -71,7 +79,7 @@ export default function CreateProjectForm() {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
   };
 
   const firebaseApp = initializeApp(firebaseConfig);
@@ -86,7 +94,7 @@ export default function CreateProjectForm() {
       if (user) {
         setUserId(user.uid);
       } else {
-        router.push('/login');
+        router.push("/login");
       }
     });
     return () => unsubscribe();
@@ -119,9 +127,13 @@ export default function CreateProjectForm() {
 
       const cleanedValues = {
         ...values,
-        teamMembers: values.teamMembers.filter(member => member.trim() !== ""),
-        links: values.links.filter(link => link.trim() !== ""),
-        citations: values.citations.filter(citation => citation.trim() !== ""),
+        teamMembers: values.teamMembers.filter(
+          (member) => member.trim() !== ""
+        ),
+        links: values.links.filter((link) => link.trim() !== ""),
+        citations: values.citations.filter(
+          (citation) => citation.trim() !== ""
+        ),
       };
 
       if (cleanedValues.teamMembers.length === 0) {
@@ -140,14 +152,16 @@ export default function CreateProjectForm() {
       router.refresh();
     } catch (error) {
       console.error("Submission error:", error);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+      setError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
   const handleFileUpload = (files: File[]) => {
-    const fileData = files.map(file => ({
+    const fileData = files.map((file) => ({
       name: file.name,
       size: file.size,
       type: file.type,
@@ -164,13 +178,14 @@ export default function CreateProjectForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 ">
+      <h1 className="text-4xl font-bold mb-6">Create New Project</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
             name="name"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Project Name</FormLabel>
                 <FormControl>
@@ -184,7 +199,7 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="designation"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Project Designation</FormLabel>
                 <FormControl>
@@ -199,7 +214,7 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="about"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>About Project</FormLabel>
                 <FormControl>
@@ -217,12 +232,12 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="teamMembers"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Team Members</FormLabel>
                 <FormControl>
                   <div className="space-y-2">
-                    {field.value.map((member, index) => (
+                    {field.value.map((member: any, index: number) => (
                       <div key={index} className="flex items-center space-x-2">
                         <Input
                           placeholder="Enter team member name"
@@ -239,7 +254,9 @@ export default function CreateProjectForm() {
                             variant="outline"
                             size="icon"
                             onClick={() => {
-                              const newValue = field.value.filter((_, i) => i !== index);
+                              const newValue = field.value.filter(
+                                (_: any, i: number) => i !== index
+                              );
                               field.onChange(newValue);
                             }}
                           >
@@ -267,7 +284,7 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="timeline"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Project Completion Date</FormLabel>
                 <Popover>
@@ -289,15 +306,17 @@ export default function CreateProjectForm() {
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date < new Date() || date > new Date("2100-01-01")
-                      }
-                      initialFocus
-                    />
+
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    className="rounded-md border"
+                    disabled={(date) =>
+                      date < new Date() || date > new Date("2100-01-01")
+                    }
+                    initialFocus
+                  />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
@@ -308,12 +327,12 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="links"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Relevant Links</FormLabel>
                 <FormControl>
                   <div className="space-y-2">
-                    {field.value.map((link, index) => (
+                    {field.value.map((link: any, index: number) => (
                       <div key={index} className="flex items-center space-x-2">
                         <Input
                           placeholder="https://example.com"
@@ -329,7 +348,9 @@ export default function CreateProjectForm() {
                           variant="outline"
                           size="icon"
                           onClick={() => {
-                            const newValue = field.value.filter((_, i) => i !== index);
+                            const newValue = field.value.filter(
+                              (_: any, i: number) => i !== index
+                            );
                             field.onChange(newValue);
                           }}
                         >
@@ -356,12 +377,12 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="citations"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Citations</FormLabel>
                 <FormControl>
                   <div className="space-y-2">
-                    {field.value.map((citation, index) => (
+                    {field.value.map((citation: string, index: number) => (
                       <div key={index} className="flex items-center space-x-2">
                         <Input
                           placeholder={`Citation ${index + 1}`}
@@ -378,7 +399,9 @@ export default function CreateProjectForm() {
                             variant="outline"
                             size="icon"
                             onClick={() => {
-                              const newValue = field.value.filter((_, i) => i !== index);
+                              const newValue = field.value.filter(
+                                (_: any, i: number) => i !== index
+                              );
                               field.onChange(newValue);
                             }}
                           >
@@ -406,7 +429,7 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="goalAmount"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Goal Amount (AVAX)</FormLabel>
                 <FormControl>
@@ -425,11 +448,13 @@ export default function CreateProjectForm() {
           <FormField
             control={form.control}
             name="pdfs"
-            render={({ field }) => (
+            render={({ field }: any) => (
               <FormItem>
                 <FormLabel>Attach PDFs</FormLabel>
                 <FormControl>
-                  <FileUpload onChange={handleFileUpload} Form={form} />
+                  <div className="flex flex-col items-center justify-center border p-5 rounded-lg pb-9">
+                    <FileUpload onChange={handleFileUpload} Form={form} />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -13,13 +13,14 @@ interface Author {
 interface Project {
   id: string;
   name: string;
-  field: string;
-  desc?: string;
-  timePosted: string;
-  author?: Author;
+  designation?: string;
+  timeline: string;
+  links: string[];
+  about?: string;
+  createdAt: string;
+  author: Author;
   currentFunding: number;
-  goalFunding: number;
-  primaryLink?: string;
+  goalAmount: number;
   userAnonimity: boolean;
 }
 
