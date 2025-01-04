@@ -31,6 +31,8 @@ interface Project {
 const ExplorePage = () => {
   const { address } = useAccount()
   //address variable is accessable here
+
+
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +58,11 @@ const ExplorePage = () => {
 
     fetchProjects()
   }, [])
+
+
+  const projectClick = (project: Project) => {
+    
+  }
 
   if (isLoading) {
     return (
