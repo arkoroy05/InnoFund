@@ -3,6 +3,9 @@ import { useState } from "react";
 import { Progress } from "./ui/progress";
 import { TrashIcon } from "lucide-react";
 import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 
 interface Project {
   id: string;
@@ -33,67 +36,69 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
       setShowConfirmation(false);
     }
   };
-  console.log(project);
+
+  const router = useRouter();
   project.currentFunding = project.currentFunding || 0;
   return (
-    <div className="p-6 border bg-neutral-900 rounded-lg shadow-md min-w-[20rem]">
-      <div className="flex flex-col sm:flex-row">
-        <div className="w-full">
-          <div className="flex justify-between items-start gap-4 flex-col w-full">
-            <div className="flex justify-between items-center w-full">
-              <h3 className="text-2xl font-semibold text-neutral-300 flex items-center gap-2">
-                {project.name}
-                <span className="text-stone-400 text-sm border py-1 px-2 rounded-full ml-2 border-stone-600">
-                  {project.currentFunding} AVAX
-                </span>
-                <span className="text-lime-400 text-sm border py-1 px-2 rounded-full border-lime-500/70">
-                  {project.goalAmount} AVAX
-                </span>{" "}
-              
-              </h3>
-              <div className="delete-button min-w-[160px] flex justify-end">
-                {!showConfirmation ? (
-                  <Button
-                    onClick={() => setShowConfirmation(true)}
-                    className="flex justify-center items-center gap-1 text-sm px-2"
-                    variant={"destructive"}
-                    disabled={isDeleting}
-                  >
-                    <TrashIcon />Delete
-                  </Button>
-                ) : (
-                  <div className="flex items-center space-x-2">
+    <Link href={`/projects/${project.id}`} className="bg-neutral-900 hover:bg-neutral-800 rounded-lg">
+      <div className="p-6 shadow-md min-w-[20rem]">
+        <div className="flex flex-col sm:flex-row">
+          <div className="w-full">
+            <div className="flex justify-between items-start gap-4 flex-col w-full">
+              <div className="flex justify-between items-center w-full">
+                <h3 className="text-2xl font-semibold text-neutral-300 flex items-center gap-2">
+                  {project.name}
+                  <span className="text-stone-400 text-sm border py-1 px-2 rounded-full ml-2 border-stone-600">
+                    {project.currentFunding} AVAX
+                  </span>
+                  <span className="text-lime-400 text-sm border py-1 px-2 rounded-full border-lime-500/70">
+                    {project.goalAmount} AVAX
+                  </span>{" "}
+      
+                </h3>
+                <div className="delete-button min-w-[160px] flex justify-end">
+                  {!showConfirmation ? (
                     <Button
-                      onClick={handleDelete}
-                      disabled={isDeleting}
+                      onClick={() => setShowConfirmation(true)}
+                      className="flex justify-center items-center gap-1 text-sm px-2"
                       variant={"destructive"}
-                      className=""
-                    >
-                      {isDeleting ? "Deleting..." : "Confirm"}
-                    </Button>
-                    <Button
-                      onClick={() => setShowConfirmation(false)}
                       disabled={isDeleting}
-                      variant={"outline"}
-                      className="text-sm bg-transparent"
                     >
-                      Cancel
+                      <TrashIcon />Delete
                     </Button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        variant={"destructive"}
+                        className=""
+                      >
+                        {isDeleting ? "Deleting..." : "Confirm"}
+                      </Button>
+                      <Button
+                        onClick={() => setShowConfirmation(false)}
+                        disabled={isDeleting}
+                        variant={"outline"}
+                        className="text-sm bg-transparent"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
+              <Progress
+                className="w-full"
+                value={project.currentFunding / project.goalAmount}
+              />
             </div>
-
-            <Progress
-              className="w-full"
-              value={project.currentFunding / project.goalAmount}
-            />
+            <p className="text-sm text-gray-500 mt-2">
+              Created on {formatDate(project.createdAt)}
+            </p>
           </div>
-          <p className="text-sm text-gray-500 mt-2">
-            Created on {formatDate(project.createdAt)}
-          </p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

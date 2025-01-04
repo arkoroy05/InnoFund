@@ -11,6 +11,9 @@ import { toast } from "@/components/ui/toast";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import AnimatedGradientText from "@/components/ui/gradient-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -31,7 +34,8 @@ export default function ProfilePage() {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const auth = getAuth();
-
+  const earnings = 20;
+  const router = useRouter();
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -95,82 +99,63 @@ export default function ProfilePage() {
 
   return (
     <div className="relative top-[3.5rem]">
-      {/* <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <CardSpotlight>
-              <div className="text-center mb-6">
-                <div className="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <h1 className="text-3xl font-bold text-purple-800">{currentUser?.displayName}</h1>
-                <p className="text-sm text-gray-500">u/{currentUser?.email}</p>
-              </div>
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">
-                  {currentUser?.createdAt && formatDate(new Date(currentUser?.createdAt))}
-                </p>
-              </div>
-              <ConnectWalletButton 
-                isConnected={isWalletConnected}
-                onConnect={() => setIsWalletConnected(true)}
-                onDisconnect={() => setIsWalletConnected(false)}
+      <div className="outsideContainer flex flex-col items-center justify-center mx-[5vw] py-8 gap-3">
+        <div className="profile w-full flex space-x-9 justify-between items-center">
+          <div className="profile-details w-full p-10 py-0 flex space-x-9 h-full">
+            <Avatar className="h-[calc(80%)] aspect-square w-auto border-2 border-stone-700 max-h-[20vh] mt-1">
+              <AvatarImage
+                src={
+                  currentUser?.photoURL ||
+                  `https://avatars.githubusercontent.com/${currentUser?.username}?size=200`
+                }
+                alt={`GitHub avatar for ${currentUser?.username}`}
               />
-            </CardSpotlight>
-          </div>
-          <CardSpotlight className="lg:col-span-2">
-              <AnimatedGradientText className='text-3xl font-bold'>Projects</AnimatedGradientText>
-              <div className="space-y-6">
-                {userProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} onDelete={handleProjectDelete} />
-                ))}
-              </div>
-          </CardSpotlight>
-        </div> */}
-      <div className="outsideContainer flex flex-col items-center justify-center mx-20 py-8 gap-3">
-        <div className="profile bg- w-full p-10 py-0 flex space-x-9">
-          <Avatar className="h-[calc(80%)] aspect-square w-auto border-2 border-stone-700 max-h-[20vh]">
-            <AvatarImage
-              src={
-                currentUser?.photoURL ||
-                `https://avatars.githubusercontent.com/${currentUser?.username}?size=200`
-              }
-              alt={`GitHub avatar for ${currentUser?.username}`}
-            />
-            <AvatarFallback>
-              <AvatarImage src="/avalanche-avax-logo.svg" />
-            </AvatarFallback>
-          </Avatar>
-          <ConnectButton showBalance={true}></ConnectButton>
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold text-white">
-              {currentUser?.displayName}
-            </h1>
-            <p className="text-[clamp(1.0rem,3vw,1.5rem)] font-light text-sm text-gray-500">
-              u/{currentUser?.reloadUserInfo.screenName}
-            </p>
+              <AvatarFallback>
+                <AvatarImage src="/avalanche-avax-logo.svg" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <h1 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold text-white">
+                {currentUser?.displayName}
+              </h1>
+              <p className="text-[clamp(0.8rem,2.5vw,1.2rem)] font-light text-xs text-gray-500">
+                u/{currentUser?.reloadUserInfo.screenName}
+              </p>
+              <p className="text-[clamp(0.8rem,2.5vw,1.2rem)] font-light text-xs text-gray-500 pt-3">
+                {currentUser?.email}
+              </p>
+            </div>
           </div>
         </div>
         <div className="projects bg- w-full flex flex-col">
-            <header className="p-10">
-              <h1 className="text-3xl font-bold">
-                Projects
-              </h1>
-            </header>
-            <main className="space-y-6 p-10 pt-0 flex flex-col ">
-              {userProjects.length > 0 ? (
-                userProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onDelete={handleProjectDelete}
-                  />
-                ))
-              ) : (
-                <div className="m-auto flex items-center justify-center -translate-x-[10%] -translate-y-[20%]">
-                  <img src="/empty.png" alt="" className="max-h-[20vw] max-w-[20vw] filter grayscale"/>
-                  <p className="text-2xl text-gray-500">No Projects</p>
-                </div>
-              )}
-            </main>
+          <header className="p-10 flex gap-2 items-center">
+            <h1 className="text-3xl font-bold">Projects</h1>
+            <div className="border border-stone-600 px-2 py-1 rounded-lg">{userProjects.length}</div>
+            <Button variant={"outline"} className="text-sm bg-transparent" onClick={() => router.push('/createproject')}>
+              <Plus className="h-4 w-4" />
+                  Create Project
+            </Button>              
+          </header>
+          <main className="space-y-6 p-10 pt-0 flex flex-col ">
+            {userProjects.length > 0 ? (
+              userProjects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onDelete={handleProjectDelete}
+                />
+              ))
+            ) : (
+              <div className="m-auto flex items-center justify-center -translate-x-[10%] -translate-y-[20%]">
+                <img
+                  src="/empty.png"
+                  alt=""
+                  className="max-h-[20vw] max-w-[20vw] filter grayscale"
+                />
+                <p className="text-2xl text-gray-500">No Projects</p>
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </div>
