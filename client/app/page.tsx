@@ -68,7 +68,7 @@ const Landing = () => {
         <h1 className="text-4xl p-2 font-sans font-bold bg-clip-text text-transparent bg-gradient-to-t from-neutral-500 to-white">
           Empowering Research, Decentralizing Funding
         </h1>
-        <p className="text-neutral-300 text-xl mt-2">Get funded for your innovations in AVAX</p>
+        <p className="text-neutral-300 text-xl mt-2">Your Innovations Deserve a Platform</p>
         <Button 
         onClick={handleGithubSignIn}
         className="backdrop-blur-lg bg-white/10 rounded-full p-5 py-6 mt-4 text-neutral-300 text-lg hover:bg-white/10 hover:border hover:border-neutral-300/40">
