@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import * as z from "zod";
-import { CalendarIcon, PlusCircle, X, Paperclip, UserRoundPlus, Link } from "lucide-react";
+import { CalendarIcon, PlusCircle, X, Link, UserRoundPlus } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
 
@@ -17,7 +17,6 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,7 +31,6 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { getAuth } from 'firebase/auth';
 import { initializeApp } from "firebase/app";
 
-
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Project name must be at least 2 characters.",
@@ -40,28 +38,24 @@ const formSchema = z.object({
   about: z.string().min(10, {
     message: "About section must be at least 10 characters.",
   }),
-  teamMembers: z.array(z.string()).min(1, {
-    message: "Please add at least one team member.",
-  }),
+  teamMembers: z.array(z.string().min(1, "Team member name cannot be empty")),
   timeline: z.date({
     required_error: "Please select a completion date.",
   }),
-  links: z
-    .array(z.string().url({ message: "Please enter a valid URL." }))
-    .optional(),
-  citations: z.string().optional(),
+  links: z.array(z.string().url({ message: "Please enter a valid URL." }))
+    .default([]),
+  citations: z.array(z.string())
+    .default([]),
   goalAmount: z.number().positive({
     message: "Goal amount must be a positive number.",
   }),
-  pdfs: z
-    .array(
-      z.object({
-        name: z.string(),
-        size: z.number(),
-        type: z.string(),
-      })
-    )
-    .optional(),
+  pdfs: z.array(
+    z.object({
+      name: z.string(),
+      size: z.number(),
+      type: z.string(),
+    })
+  ).default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -75,39 +69,25 @@ export default function CreateProjectForm() {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-};
+  };
 
   const firebaseApp = initializeApp(firebaseConfig);
   const auth = getAuth(firebaseApp);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
-  const [teamMembers, setTeamMembers] = useState([""]);
-  const [links, setLinks] = useState([""]);
-  const [pdfs, setPdfs] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [citations, setCitations] = useState(['']);
-  
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserId(user.uid);
-        console.log("User ID:", user.uid);
       } else {
-        setUserId(null);
+        router.push('/login');
       }
     });
-  
-    // Cleanup subscription
     return () => unsubscribe();
-  });
-
-  const addCitation = () => setCitations([...citations, ''])
-  const removeCitation = (index: number) => {
-    const newCitations = citations.filter((_, i) => i !== index)
-    setCitations(newCitations)
-  }
-
+  }, [router]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -122,320 +102,326 @@ export default function CreateProjectForm() {
       pdfs: [],
     },
   });
+
   async function onSubmit(values: FormValues) {
-    console.log("Form submission started");
-    console.log("Current userId:", userId);
-    
     if (!userId) {
-        setError("User must be logged in to create a project");
-        console.log("No userId found");
-        return;
+      setError("Please login to create a project");
+      return;
     }
 
     try {
-        setIsSubmitting(true);
-        setError(null);
+      setIsSubmitting(true);
+      setError(null);
 
-        const requestBody = {
-            name: values.name,
-            about: values.about,
-            teamMembers: values.teamMembers.filter(member => member.trim() !== ""),
-            userId: userId,
-            timeline: values.timeline.toISOString(),
-            links: values.links ? values.links.filter(link => link.trim() !== "") : [],
-            citations: values.citations || "",
-            goalAmount: values.goalAmount,
-            pdfs: pdfs.map(pdf => ({
-                name: pdf.name,
-                size: pdf.size,
-                type: pdf.type,
-            })),
-        };
+      const cleanedValues = {
+        ...values,
+        teamMembers: values.teamMembers.filter(member => member.trim() !== ""),
+        links: values.links.filter(link => link.trim() !== ""),
+        citations: values.citations.filter(citation => citation.trim() !== ""),
+      };
 
-        console.log("Request body:", requestBody);
+      if (cleanedValues.teamMembers.length === 0) {
+        setError("At least one team member is required");
+        return;
+      }
 
-        const response = await axios.post("/api/projects", requestBody);
-        console.log("Response:", response);
+      const requestBody = {
+        ...cleanedValues,
+        userId,
+        timeline: values.timeline.toISOString(),
+      };
 
-        router.push("/projects");
-        router.refresh();
+      await axios.post("/api/projects", requestBody);
+      router.push("/projects");
+      router.refresh();
     } catch (error) {
-        console.error("Submission error:", error);
-        setError(error instanceof Error ? error.message : "An unexpected error occurred");
+      console.error("Submission error:", error);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-}
-
-  const addTeamMember = () => {
-    setTeamMembers([...teamMembers, ""]);
-  };
-
-  const removeTeamMember = (index: number) => {
-    const newTeamMembers = teamMembers.filter((_, i) => i !== index);
-    setTeamMembers(newTeamMembers);
-  };
-
-  const addLink = () => {
-    setLinks([...links, ""]);
-  };
-
-  const removeLink = (index: number) => {
-    const newLinks = links.filter((_, i) => i !== index);
-    setLinks(newLinks);
-  };
+  }
 
   const handleFileUpload = (files: File[]) => {
-    setPdfs(files);
-    console.log(files);
+    const fileData = files.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    }));
+    form.setValue("pdfs", fileData);
   };
 
-  return (
-    <div className="">
-
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex flex-col gap-8">
-          <div className="flex-1 space-y-8">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter project name"
-                      {...field}
-                      className=""
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="about"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>About Project</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Tell us about your project"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="teamMembers"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Team Members</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      {teamMembers.map((member, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2"
-                        >
-                          <Input
-                            placeholder="Enter team member name"
-                            value={member}
-                            onChange={(e) => {
-                              const newTeamMembers = [...teamMembers];
-                              newTeamMembers[index] = e.target.value;
-                              setTeamMembers(newTeamMembers);
-                              field.onChange(newTeamMembers.filter(Boolean));
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => removeTeamMember(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addTeamMember}
-                  >
-                    <UserRoundPlus className="h-4 w-4" />
-                    Add Team Member
-                  </Button>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="timeline"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Project Completion Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={`w-[240px] pl-3 text-left font-normal ${
-                            !field.value && "text-muted-foreground"
-                          }`}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date() || date > new Date("2100-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="links"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Relevant Links</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      {links.map((link, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2"
-                        >
-                          <Input
-                            placeholder="https://example.com"
-                            value={link}
-                            onChange={(e) => {
-                              const newLinks = [...links];
-                              newLinks[index] = e.target.value;
-                              setLinks(newLinks);
-                              field.onChange(newLinks.filter(Boolean));
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => removeLink(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </FormControl>
-                  <Button type="button" variant="outline" onClick={addLink}>
-                    <Link className="h-4 w-4" />
-                    Add Link
-                  </Button>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-             <div className="space-y-2">
-
-        <Label>Citations</Label>
-        {citations.map((citation, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            <Input
-              placeholder={`Citation ${index + 1}`}
-              value={citation}
-              onChange={(e) => {
-                const newCitations = [...citations]
-                newCitations[index] = e.target.value
-                setCitations(newCitations)
-              }}
-              required
-            />
-            {index > 0 && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => removeCitation(index)}>
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        ))}
-        <Button type="button" variant="outline" size="sm" onClick={addCitation}>
-          <PlusCircle className="h-4 w-4 mr-2" /> Add Citation
-        </Button>
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+        {error}
       </div>
+    );
+  }
 
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter project name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="goalAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Goal Amount (AVAX)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter goal amount"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+          <FormField
+            control={form.control}
+            name="about"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>About Project</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell us about your project"
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="teamMembers"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Team Members</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    {field.value.map((member, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder="Enter team member name"
+                          value={member}
+                          onChange={(e) => {
+                            const newValue = [...field.value];
+                            newValue[index] = e.target.value;
+                            field.onChange(newValue);
+                          }}
+                        />
+                        {field.value.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const newValue = field.value.filter((_, i) => i !== index);
+                              field.onChange(newValue);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => field.onChange([...field.value, ""])}
+                  className="mt-2"
+                >
+                  <UserRoundPlus className="h-4 w-4 mr-2" />
+                  Add Team Member
+                </Button>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="timeline"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Project Completion Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={`w-[240px] pl-3 text-left font-normal ${
+                          !field.value && "text-muted-foreground"
+                        }`}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date() || date > new Date("2100-01-01")
+                      }
+                      initialFocus
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="w-full md:w-64 space-y-8 ">
-            <FormField
-              control={form.control}
-              name="pdfs"
-              render={({ field }) => <>
+          <FormField
+            control={form.control}
+            name="links"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Relevant Links</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    {field.value.map((link, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder="https://example.com"
+                          value={link}
+                          onChange={(e) => {
+                            const newValue = [...field.value];
+                            newValue[index] = e.target.value;
+                            field.onChange(newValue);
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            const newValue = field.value.filter((_, i) => i !== index);
+                            field.onChange(newValue);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => field.onChange([...field.value, ""])}
+                  className="mt-2"
+                >
+                  <Link className="h-4 w-4 mr-2" />
+                  Add Link
+                </Button>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="citations"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Citations</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    {field.value.map((citation, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          placeholder={`Citation ${index + 1}`}
+                          value={citation}
+                          onChange={(e) => {
+                            const newValue = [...field.value];
+                            newValue[index] = e.target.value;
+                            field.onChange(newValue);
+                          }}
+                        />
+                        {field.value.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const newValue = field.value.filter((_, i) => i !== index);
+                              field.onChange(newValue);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => field.onChange([...field.value, ""])}
+                  className="mt-2"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Citation
+                </Button>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="goalAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Goal Amount (AVAX)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Enter goal amount"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pdfs"
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Attach PDFs</FormLabel>
                 <FormControl>
-                  <FileUpload onChange={handleFileUpload} Form={form}></FileUpload>
+                  <FileUpload onChange={handleFileUpload} Form={form} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
-              <FormMessage/>
-              </>}
-            ></FormField>
+            )}
+          />
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Publishing..." : "Publish Project"}
-            </Button>
-          </div>
-        </div>
-      </form>
-    </Form>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Publishing..." : "Publish Project"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }
