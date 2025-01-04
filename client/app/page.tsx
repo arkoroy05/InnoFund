@@ -7,10 +7,10 @@ import { getAuth, signInWithPopup, GithubAuthProvider} from 'firebase/auth';
 import { useRouter } from 'next/navigation'
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import Router from "next/router";
 
 const Scene = dynamic(() => import("@/components/Canvas"), { ssr: false });
 const ThreeEnabled = true;
-
 
 
 const Landing = () => {
@@ -21,14 +21,21 @@ const Landing = () => {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
     };
 
 
     const firebaseApp = initializeApp(firebaseConfig);
-    const auth = getAuth();
+    const auth = getAuth(firebaseApp);
     const db = getFirestore(firebaseApp);
     const router = useRouter();
+    
+    const user = auth.currentUser;
+    if(user){
+      router.push('/feed');
+    }
+
   const handleGithubSignIn = async () => {
       const provider = new GithubAuthProvider();
       try {
