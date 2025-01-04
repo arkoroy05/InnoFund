@@ -1,11 +1,42 @@
 "use client"
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { onAuthStateChanged } from 'firebase/auth';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+
 
 const NavBar = () => {
   const links = [
     { name: "Home", href: "/", searchHref: "/" },    
   ];
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe(); // Unsubscribe when component unmounts
+  }, []);
 
   // Get current path from window location
   const currentPath = usePathname();
@@ -20,7 +51,6 @@ const NavBar = () => {
   return (
     <div className="fixed left-0 top-0 w-full h-[3.5rem]  backdrop-blur-[20rem] z-[99] flex items-center justify-between p-2 pl-3 border-b border-neutral-800/20">
       <a href="/">
-
         <h1 className="text-2xl font-extralight font-mono text-violet-400">IF</h1>
       </a>
       
@@ -39,11 +69,18 @@ const NavBar = () => {
             {item.name}
           </a>
         ))}
-                  <button className="inline-flex h-auto p-2 px-3 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] font-medium pointer-events-auto hover:border-violet-700/70" onClick={() => (window.location.href = "/user")}>
-        Get Started
-      </button>
+        {user ? (
+          <>
+          <ConnectButton />
+          </>
+        ) : (
+          <button className="inline-flex h-auto p-2 px-3 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] font-medium pointer-events-auto hover:border-violet-700/70" onClick={() => (window.location.href = "/user")}>
+            Get Started
+          </button>
+        )}
       </nav>
     </div>
+    
   );
 };
 
