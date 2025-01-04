@@ -133,7 +133,7 @@ const Page = ({ params }: { params: { id: string } }) => {
             </div>
           </div>
           <div className="pdfs flex flex-col gap-2">
-            {data.pdfs.length > 0 && (
+            {data.pdfs  && (
               <>
                 <h1 className="text-lg font-medium"> Relevant PDFs</h1>
                 {data.pdfs.map((pdf, index) => (
