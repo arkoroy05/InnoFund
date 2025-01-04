@@ -97,6 +97,7 @@ const ExplorePage = () => {
         {projects.filter((project) => project?.name.toLowerCase().startsWith(searchTerm.toLowerCase())).map((project) => (
           <FundingCard
             key={Number(project.id)}
+            id={project.id}
             title={project?.name || "No title provided."}
             field={project?.designation || "No field provided."}
             desc={project?.about || "No description provided."}
