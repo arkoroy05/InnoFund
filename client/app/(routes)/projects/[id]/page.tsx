@@ -3,16 +3,19 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useReadMore } from "@/hooks/useReadMore";
-import { ArrowUpRight, ChevronDown, ChevronUp, Download, FileIcon } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  FileIcon,
+} from "lucide-react";
 import { Team } from "@/components/Team";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-<<<<<<< HEAD
 import Image from "next/image";
-=======
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
->>>>>>> 9dfb1b90f064fa4c7b0b1881a0ab49d35c7bc001
 
 interface ProjectData {
   name: string;
@@ -21,7 +24,7 @@ interface ProjectData {
   userId: string;
   timeline: string;
   links: string[];
-  citations: string;
+  citations: string[];
   goalAmount: number;
   pdfs: Array<{
     name: string;
@@ -35,14 +38,13 @@ const Page = ({ params }: { params: { id: string } }) => {
   const { isConnected: isWalletConnected } = useAccount();
   const handleDonate = () => {
     if (isWalletConnected) {
-      router.push(`/payment?projectId=${id}`); // Route to /payment with projectId
+      router.push(`/payment?projectId=${params.id}`); // Route to /payment with projectId
     } else {
       router.push("/login");
     }
   };
   const [data, setData] = useState<ProjectData | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const isWalletConnected = true;
 
   useEffect(() => {
     axios
@@ -138,7 +140,10 @@ const Page = ({ params }: { params: { id: string } }) => {
               <>
                 <h1 className="text-lg font-medium"> Relevant PDFs</h1>
                 {data.pdfs.map((pdf, index) => (
-                  <div key={index} className="flex items-center justify-between max-w-[800px] min-w-[200px] bg-neutral-900 rounded-lg p-2 border border-neutral-800">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between max-w-[800px] min-w-[200px] bg-neutral-900 rounded-lg p-2 border border-neutral-800"
+                  >
                     <div className="flex items-center gap-2">
                       <FileIcon className="h-5 w-5 text-blue-500" />
                       <div className="border border-neutral-800 p-2 py-1 rounded-lg">
@@ -149,15 +154,8 @@ const Page = ({ params }: { params: { id: string } }) => {
                         )}
                       </div>
                     </div>
-                    <a
-                      href={pdf.name}
-                      download
-                      className="flex items-center"
-                    >
-                      <Button
-                        variant={"outline"}
-                        className="text-neutral-400"
-                      >
+                    <a href={pdf.name} download className="flex items-center">
+                      <Button variant={"outline"} className="text-neutral-400">
                         <Download className="ml-1 h-4 w-4" /> Download
                       </Button>
                     </a>
