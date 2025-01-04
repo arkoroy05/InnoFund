@@ -37,6 +37,9 @@ interface ResearchFundingCardProps {
   timeline: string;
   potentialImpact: string;
   teamSize: number;
+  team: [
+    avatar: string,
+  ]
   author?: {
     name: string;
     credentials: string;
@@ -51,13 +54,12 @@ export default function FundingCard({
   desc,
   field,
   timeline,
+  team,
   potentialImpact,
   teamSize,
   author,
   currentFunding,
   goalFunding,
-  backers,
-  daysLeft,
 }: ResearchFundingCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
