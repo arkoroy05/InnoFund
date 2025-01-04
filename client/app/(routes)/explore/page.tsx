@@ -6,6 +6,7 @@ import { Search } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { Input } from '@/components/ui/input'
+import LoadingPage from '@/app/loading'
 
 
 interface Author {
@@ -65,9 +66,7 @@ const ExplorePage = () => {
   if (isLoading) {
     return (
       <div className="relative top-[3.5rem] min-h-screen">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-pulse text-3xl">getting those innovations for you</div>
-        </div>
+<LoadingPage></LoadingPage>
       </div>
     )
   }
@@ -111,9 +110,14 @@ const ExplorePage = () => {
       </div>
 
       {projects.length === 0 && !isLoading && (
-        <div className="flex justify-center items-center h-72">
-          <p className="text-gray-500">quite empty innit?</p>
-        </div>
+              <div className="m-auto flex items-center justify-center -translate-x-[10%] -translate-y-[20%]">
+              <img
+                src="/empty.png"
+                alt=""
+                className="max-h-[20vw] max-w-[20vw] filter grayscale"
+              />
+              <p className="text-2xl text-gray-500">No Projects</p>
+            </div>
       )}
     </div>
   )

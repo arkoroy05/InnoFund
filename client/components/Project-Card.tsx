@@ -1,7 +1,7 @@
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { Progress } from "./ui/progress";
-import { TrashIcon } from "lucide-react";
+import { ArrowUpRight, TrashIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -40,7 +40,7 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
   const router = useRouter();
   project.currentFunding = project.currentFunding || 0;
   return (
-    <Link href={`/projects/${project.id}`} className="bg-neutral-900 hover:bg-neutral-800 rounded-lg">
+    <div className="bg-neutral-900 hover:border hover:border-neutral-800 rounded-lg">
       <div className="p-6 shadow-md min-w-[20rem]">
         <div className="flex flex-col sm:flex-row">
           <div className="w-full">
@@ -56,37 +56,53 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
                   </span>{" "}
       
                 </h3>
-                <div className="delete-button min-w-[160px] flex justify-end">
-                  {!showConfirmation ? (
-                    <Button
-                      onClick={() => setShowConfirmation(true)}
-                      className="flex justify-center items-center gap-1 text-sm px-2"
-                      variant={"destructive"}
-                      disabled={isDeleting}
-                    >
-                      <TrashIcon />Delete
-                    </Button>
-                  ) : (
-                    <div className="flex items-center space-x-2">
+                <div className="flex gap-2">
+
+                  <div className="delete-button min-w-[160px] flex justify-end pointer-events-auto">
+                    {!showConfirmation ? (
                       <Button
-                        onClick={handleDelete}
-                        disabled={isDeleting}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowConfirmation(true);
+                        }}
+                        className="flex justify-center items-center gap-1 text-sm px-2"
                         variant={"destructive"}
-                        className=""
-                      >
-                        {isDeleting ? "Deleting..." : "Confirm"}
-                      </Button>
-                      <Button
-                        onClick={() => setShowConfirmation(false)}
                         disabled={isDeleting}
-                        variant={"outline"}
-                        className="text-sm bg-transparent"
                       >
-                        Cancel
+                        <TrashIcon />Delete
                       </Button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                          variant={"destructive"}
+                          className=""
+                        >
+                          {isDeleting ? "Deleting..." : "Confirm"}
+                        </Button>
+                        <Button
+                          onClick={() => setShowConfirmation(false)}
+                          disabled={isDeleting}
+                          variant={"outline"}
+                          className="text-sm bg-transparent"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                      onClick={() => {
+                        router.push(`/projects/${project.id}`);
+                      }}
+                      className="flex justify-center items-center gap-1 text-sm px-2 bg-transparent"
+                      variant={"outline"}
+                    >
+                      <ArrowUpRight /> Show Project
+                    </Button>
                 </div>
+
               </div>
               <Progress
                 className="w-full"
@@ -99,6 +115,6 @@ export default function ProjectCard({ project, onDelete }: ProjectCardProps) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
