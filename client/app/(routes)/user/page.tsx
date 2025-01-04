@@ -29,6 +29,8 @@ const Page = () => {
             const credential = GithubAuthProvider.credentialFromResult(result);
             const token = credential?.accessToken;
             const user = result.user;
+            const githubUsername= user.reloadUserInfo.screenName
+
 
             const userRef = doc(db, 'users', user.uid);
             await setDoc(userRef, {
@@ -38,6 +40,7 @@ const Page = () => {
                 photoURL: user.photoURL,
                 githubToken: token,
                 projects: {},
+                githubUsername: githubUsername,
                 createdAt: new Date(),
                 lastLogin: new Date()
             }, { merge: true });
