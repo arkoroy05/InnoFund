@@ -31,7 +31,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   useEffect(() => {
     axios
       .get(`/api/projdisplay?key=${params.id}`)
-      .then((res) => setData(res.data))
+      .then((res) => console.log(res.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [params.id]);
 
