@@ -5,6 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { initializeApp } from "firebase/app";
 import { onAuthStateChanged } from 'firebase/auth';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import CustomConnectButton from "@/components/CustomConnect";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,11 +22,17 @@ const auth = getAuth(firebaseApp);
 
 
 const NavBar = () => {
-  const links = [
+  const unprotectedlinks = [
     { name: "Home", href: "/", searchHref: "/" },    
+  ];
+  const protectedlinks = [
+    { name: "Explore", href: "/explore", searchHref: "/explore" }, 
+    { name: "Create", href: "/createproject", searchHref: "/createproject" },
+    { name: "Profile", href: "/profile", searchHref: "/profile" },
   ];
 
   const [user, setUser] = useState(null);
+  const links = user ? protectedlinks : unprotectedlinks;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -72,7 +79,7 @@ const NavBar = () => {
         ))}
         {user ? (
           <>
-          <ConnectButton />
+          <CustomConnectButton />
           </>
         ) : (
           <button className="inline-flex h-auto p-2 px-3 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] font-medium pointer-events-auto hover:border-violet-700/70" onClick={() => (window.location.href = "/user")}>
