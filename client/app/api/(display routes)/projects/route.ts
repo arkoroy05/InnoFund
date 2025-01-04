@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
             goalAmount: body.goalAmount || 0,
             pdfs: body.pdfs || [],
             isAnonymous: body.isAnonymous || false,
+            donations:0
         };
 
         await set(newProjectRef, projectData);

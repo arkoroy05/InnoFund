@@ -9,17 +9,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertCircle, Wallet, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAccount } from 'wagmi';
+import { getAuth } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+
+
 
 const PaymentPage = ({ params }: { params: { id: string } }) => {
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+    };
+
+
+
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const Wallets= useAccount();
   const isWalletConnected = Wallets.isConnected  
+   const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const db = getFirestore(firebaseApp);
   const projectId = params.id
+  
+
+
+
+
   
   const handlePayment = () => {
     setLoading(true);
-    //payment logic here
+    console.log('Payment initiated for project:', projectId);
+    console.log(auth.currentUser.uid)
     setTimeout(() => setLoading(false), 2000);
   };
 
