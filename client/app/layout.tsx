@@ -42,8 +42,10 @@ export default function RootLayout({
 
     <html lang="en" className={`${inter.variable} ${Caleb.variable}`}>
       <body className="dark bg-background text-foreground">
+     
+        <Providers initialState={initialState}>
         <Nav></Nav>
-        <Providers initialState={initialState}>{children}</Providers>
+          {children}</Providers>
       </body>
     </html>
   );

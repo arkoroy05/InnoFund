@@ -5,6 +5,7 @@ import FundingCard from '@/components/FundingCard'
 import { Search } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
+import { Input } from '@/components/ui/input'
 
 
 interface Author {
@@ -33,6 +34,7 @@ const ExplorePage = () => {
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState<string>('')
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -80,13 +82,12 @@ const ExplorePage = () => {
       <h1 className="text-4xl font-bold my-6 mx-20 flex items-center">
         Explore <Search className="h-8 w-8 mx-2" />
       </h1>
-      <div className='ml-20'>
-
-      <ConnectButton label="Connect Your Wallet" chainStatus="icon"  showBalance={false} />
+      <div className='mx-20'>
+      <Input placeholder="Search"  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}  />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-20">
-        {projects.map((project) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-20 mt-5">
+        {projects.filter((project) => project?.name.toLowerCase().startsWith(searchTerm.toLowerCase())).map((project) => (
           <FundingCard
             key={Number(project.id)}
             title={project?.name || "No title provided."}
@@ -99,7 +100,7 @@ const ExplorePage = () => {
             goalFunding={project?.goalAmount || 0}
             userAnonimity={project?.userAnonimity || false}
             completionTime={new Date(project?.timeline) || null}
-          />
+          /> 
         ))}
       </div>
 

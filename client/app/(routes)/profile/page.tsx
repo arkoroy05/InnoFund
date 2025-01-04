@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/utils";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import ProjectCard from "@/components/Project-Card";
-import ConnectWalletButton from "@/components/connect-web3-wallet";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get, child } from "firebase/database";
 import { toast } from "@/components/ui/toast";
@@ -99,36 +99,6 @@ export default function ProfilePage() {
 
   return (
     <div className="relative top-[3.5rem]">
-      {/* <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <CardSpotlight>
-              <div className="text-center mb-6">
-                <div className="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <h1 className="text-3xl font-bold text-purple-800">{currentUser?.displayName}</h1>
-                <p className="text-sm text-gray-500">u/{currentUser?.email}</p>
-              </div>
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">
-                  {currentUser?.createdAt && formatDate(new Date(currentUser?.createdAt))}
-                </p>
-              </div>
-              <ConnectWalletButton 
-                isConnected={isWalletConnected}
-                onConnect={() => setIsWalletConnected(true)}
-                onDisconnect={() => setIsWalletConnected(false)}
-              />
-            </CardSpotlight>
-          </div>
-          <CardSpotlight className="lg:col-span-2">
-              <AnimatedGradientText className='text-3xl font-bold'>Projects</AnimatedGradientText>
-              <div className="space-y-6">
-                {userProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} onDelete={handleProjectDelete} />
-                ))}
-              </div>
-          </CardSpotlight>
-        </div> */}
       <div className="outsideContainer flex flex-col items-center justify-center mx-[5vw] py-8 gap-3">
         <div className="profile w-full flex space-x-9 justify-between items-center">
           <div className="profile-details w-full p-10 py-0 flex space-x-9 h-full">
