@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/utils";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import ProjectCard from "@/components/Project-Card";
-import ConnectWalletButton from "@/components/connect-web3-wallet";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get, child } from "firebase/database";
 import { toast } from "@/components/ui/toast";
@@ -139,6 +139,7 @@ export default function ProfilePage() {
               <AvatarImage src="/avalanche-avax-logo.svg" />
             </AvatarFallback>
           </Avatar>
+          <ConnectButton showBalance={true}></ConnectButton>
           <div className="flex flex-col gap-2">
             <h1 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold text-white">
               {currentUser?.displayName}
