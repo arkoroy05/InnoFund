@@ -43,6 +43,7 @@ const Page = () => {
                 githubToken: token,
                 projects: {},
                 githubUsername: githubUsername,
+                donated:0,
                 createdAt: new Date(),
                 lastLogin: new Date()
             }, { merge: true });

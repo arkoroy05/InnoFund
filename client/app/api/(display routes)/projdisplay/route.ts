@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get } from "firebase/database";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,6 +15,7 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
+const firestore = getFirestore(firebaseApp);
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -31,13 +33,27 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Project not found" }, { status: 404 });
         }
         
-        const projectData = {
-            id: projectKey,
-            ...snapshot.val()
-        };
-        
-        return NextResponse.json(projectData);
+        const projectData = snapshot.val();
+
+        // Fetch user data if userId exists in project data
+        if (projectData && projectData.userId) {
+            const userDocRef = doc(firestore, "users", projectData.userId);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                projectData.user = userDocSnap.data();
+            } else {
+                console.warn("User data not found for userId:", projectData.userId);
+                // You might want to handle this case differently, e.g., setting projectData.user to null
+            }
+        } else {
+          console.warn("Project data does not contain a userId.");
+        }
+
+
+        return NextResponse.json({id: projectKey, ...projectData});
     } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 });
+        console.error("Error fetching project or user data:", error);
+        return NextResponse.json({ error: "Failed to fetch project or user data" }, { status: 500 });
     }
 }

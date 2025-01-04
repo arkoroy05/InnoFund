@@ -1,7 +1,7 @@
 // FundingCard.tsx
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,6 +24,7 @@ import {
 import { Clipboard, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
 
 interface Author {
   username: string;
@@ -131,7 +132,10 @@ export default function FundingCard({
       : author?.photoURL || "https://avatars.githubusercontent.com/u/0",
   };
   const router = useRouter();
-  const isWalletConnected = true;
+  const Wallet= useAccount();
+  const isWalletConnected = Wallet.isConnected  
+
+
   return (
     <>
       <TooltipProvider>
@@ -255,7 +259,7 @@ export default function FundingCard({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-neutral-900 text-white border border-neutral-700" >
-                  {!isWalletConnected ? "Donate with AVAX" : "Connect your wallet to donate"}
+                  {isWalletConnected ? "Donate with AVAX" : "Connect your wallet to donate"}
                 </TooltipContent>
               </Tooltip>
             </CardFooter>
