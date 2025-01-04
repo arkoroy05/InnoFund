@@ -45,7 +45,23 @@ export async function GET(request: NextRequest) {
             };
         });
 
-        return NextResponse.json(users);
+        let allProjects: any[] = [];
+
+        users.forEach(user => {
+            user.projects.forEach(project => {
+                allProjects.push({
+                    ...project,
+                    goalAmount: project.goalAmount || 0,
+                    author: {
+                        username: user.githubUsername || null,
+                        name: user.displayName || null,
+                        photoURL: user.photoURL || null,
+                    },
+                });
+            });
+        });
+
+        return NextResponse.json(allProjects);
         
     } catch (error) {
         return NextResponse.json({ error: "Error fetching data" }, { status: 500 });
