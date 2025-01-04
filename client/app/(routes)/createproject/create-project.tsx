@@ -452,7 +452,7 @@ export default function CreateProjectForm() {
               <FormItem>
                 <FormLabel>Attach PDFs</FormLabel>
                 <FormControl>
-                  <div className="flex flex-col items-center justify-center border p-5 rounded-lg pb-9">
+                  <div className="flex flex-col items-center justify-center border p-5 rounded-lg pb-9 bg-dot-white/[0.2]">
                     <FileUpload onChange={handleFileUpload} Form={form} />
                   </div>
                 </FormControl>
