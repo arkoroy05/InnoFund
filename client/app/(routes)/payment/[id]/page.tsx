@@ -50,12 +50,12 @@ const PaymentPage = ({ params }: { params: { id: string } }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 to-slate-50 p-4 md:p-8">
+    <div className="min-h-screen relative top-[3.5rem] p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-red-900">Fund The Innovation</h1>
-          <p className="text-slate-600">Support groundbreaking research and innovation projects on Avalanche</p>
+          <h1 className="text-3xl font-bold text-red-500">Fund The Innovation</h1>
+          <p className="text-neutral-600">Support groundbreaking research and innovation projects on Avalanche</p>
         </div>
 
         {/* Main Payment Card */}
@@ -74,13 +74,10 @@ const PaymentPage = ({ params }: { params: { id: string } }) => {
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="pl-12"
                   type="number"
                   step="0.01"
                 />
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                  AVAX
-                </div>
+
               </div>
             </div>
 
@@ -101,9 +98,9 @@ const PaymentPage = ({ params }: { params: { id: string } }) => {
 
             {/* Wallet Connection Status */}
             {!isWalletConnected && (
-              <Alert>
+              <Alert className="">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="mt-1">
                   Connect your wallet to the Avalanche C-Chain to proceed
                 </AlertDescription>
               </Alert>
@@ -142,7 +139,7 @@ const PaymentPage = ({ params }: { params: { id: string } }) => {
           <CardHeader>
             <CardTitle>Transaction Information</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 text-[0.9rem]">
             <div className="flex justify-between">
               <span className="text-slate-600">Gas Fee (Est.)</span>
               <span>0.001 AVAX</span>
