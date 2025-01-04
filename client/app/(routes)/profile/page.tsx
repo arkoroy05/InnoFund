@@ -115,13 +115,13 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <h1 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold text-white">
+              <h1 className="text-3xl font-bold text-white">
                 {currentUser?.displayName}
               </h1>
-              <p className="text-[clamp(0.8rem,2.5vw,1.2rem)] font-light text-xs text-gray-500">
+              <p className="text-lg font-light text-gray-500">
                 u/{currentUser?.reloadUserInfo.screenName}
               </p>
-              <p className="text-[clamp(0.8rem,2.5vw,1.2rem)] font-light text-xs text-gray-500 pt-3">
+              <p className="text-lg font-light text-gray-500 ">
                 {currentUser?.email}
               </p>
             </div>

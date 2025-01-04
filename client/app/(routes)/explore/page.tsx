@@ -110,7 +110,7 @@ const ExplorePage = () => {
       </div>
 
       {projects.length === 0 && !isLoading && (
-              <div className="m-auto flex items-center justify-center -translate-x-[10%] -translate-y-[20%]">
+              <div className="m-auto flex items-center justify-center -translate-x-[3%]">
               <img
                 src="/empty.png"
                 alt=""

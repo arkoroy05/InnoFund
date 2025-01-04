@@ -33,7 +33,7 @@ const Landing = () => {
     
     const user = auth.currentUser;
     if(user){
-      router.push('/feed');
+      router.push('/explore');
     }
 
   const handleGithubSignIn = async () => {
@@ -78,7 +78,7 @@ const Landing = () => {
         <Button 
         onClick={handleGithubSignIn}
         className="backdrop-blur-lg bg-white/10 rounded-full p-5 py-6 mt-4 text-neutral-300 text-lg hover:bg-white/10 hover:border hover:border-neutral-300/40">
-          Get Started <ChevronRight className="" />
+          Get Started with Github<ChevronRight className="" />
         </Button>
       </div>
     </div>

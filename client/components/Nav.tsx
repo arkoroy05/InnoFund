@@ -1,9 +1,15 @@
-"use client"
+"use client";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { getAuth } from 'firebase/auth';
+import {
+  getAuth,
+  signInWithPopup,
+  GithubAuthProvider,
+  onAuthStateChanged,
+} from "firebase/auth";
 import { initializeApp } from "firebase/app";
-import { onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CustomConnectButton from "@/components/CustomConnect";
 
@@ -17,16 +23,47 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
 
 
 const NavBar = () => {
-  const unprotectedlinks = [
-    { name: "Home", href: "/", searchHref: "/" },    
-  ];
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const db = getFirestore(firebaseApp);
+  const router = useRouter();
+  const handleGithubSignIn = async () => {
+    const provider = new GithubAuthProvider();
+  
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GithubAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      const user = result.user;
+  
+      // Store user data in Firestore
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(
+        userRef,
+        {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          githubToken: token,
+          projects: {},
+          createdAt: new Date(),
+          lastLogin: new Date(),
+        },
+        { merge: true }
+      );
+  
+      router.push("/explore");
+    } catch (error) {
+      console.error("Error signing in with GitHub:", error);
+    }
+  };
+  const unprotectedlinks = [{ name: "Home", href: "/", searchHref: "/" }];
   const protectedlinks = [
-    { name: "Explore", href: "/explore", searchHref: "/explore" }, 
+    { name: "Explore", href: "/explore", searchHref: "/explore" },
     { name: "Create", href: "/createproject", searchHref: "/createproject" },
     { name: "Profile", href: "/profile", searchHref: "/profile" },
   ];
@@ -48,20 +85,22 @@ const NavBar = () => {
 
   // Get current path from window location
   const currentPath = usePathname();
-  
+
   const isActive = (itemLink: string) => {
     // Exact match for root, starts with for other paths
-    return itemLink === '/' 
-      ? currentPath === itemLink 
+    return itemLink === "/"
+      ? currentPath === itemLink
       : currentPath.startsWith(itemLink) || currentPath === itemLink;
   };
 
   return (
     <div className="fixed left-0 top-0 w-full h-[3.5rem]  backdrop-blur-[20rem] z-[99] flex items-center justify-between p-2 pl-3 border-b border-neutral-800/20">
       <a href="/">
-        <h1 className="text-2xl font-extralight font-mono text-violet-400">IF</h1>
+        <h1 className="text-2xl font-extralight font-mono text-violet-400">
+          IF
+        </h1>
       </a>
-      
+
       <nav className="flex items-center gap-7">
         {links.map((item) => (
           <a
@@ -69,9 +108,11 @@ const NavBar = () => {
             href={item.href}
             className={`
               text-l font-light
-              ${isActive(item.searchHref)
-                ? 'text-primary'
-                : 'text-primary/60 hover:text-primary'}
+              ${
+                isActive(item.searchHref)
+                  ? "text-primary"
+                  : "text-primary/60 hover:text-primary"
+              }
             `}
           >
             {item.name}
@@ -79,16 +120,18 @@ const NavBar = () => {
         ))}
         {user ? (
           <>
-          <CustomConnectButton />
+            <CustomConnectButton />
           </>
         ) : (
-          <button className="inline-flex h-auto p-2 px-3 animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] font-medium pointer-events-auto hover:border-violet-700/70" onClick={() => (window.location.href = "/user")}>
+          <button
+            className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 text-white rounded-full font-light"
+            onClick={handleGithubSignIn}
+          >
             Get Started
           </button>
         )}
       </nav>
     </div>
-    
   );
 };
 
