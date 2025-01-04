@@ -34,29 +34,30 @@ interface ResearchFundingCardProps {
   title: string;
   desc: string;
   field: string;
-  timeline: string;
+  timeposted: string;
+  username: string;
   potentialImpact: string;
   teamSize: number;
   team: [
-    avatar: string,
+    username: string
   ]
   author?: {
+    username: string;
     name: string;
     credentials: string;
   };
   currentFunding: number;
   goalFunding: number;
-  backers: number;
-  daysLeft: number;
 }
 export default function FundingCard({
   title,
   desc,
   field,
-  timeline,
+  timeposted,
   team,
   potentialImpact,
   teamSize,
+  username,
   author,
   currentFunding,
   goalFunding,
@@ -75,7 +76,7 @@ export default function FundingCard({
         <CardHeader className="">
           <div className="flex items-center space-x-4 mb-2">
             <Avatar>
-              <AvatarImage src="https://github.com/whiteninja.png" />
+              <AvatarImage src={`https://github.com/${username}.png`} />
             </Avatar>
             <div className="flex flex-col w-[calc(100%-4rem)]">
               <span className="text-neutral-700">{author?.name}</span>
@@ -116,7 +117,7 @@ export default function FundingCard({
         </CardContent>
 
         <CardFooter className="flex items-center flex-col justify-between">
-          <span className="text-neutral-700">{timeline}</span>
+          <span className="text-neutral-700">{timeposted}</span>
           <div className="w-full">
             <Progress value={progress} className="m-2"></Progress>
             <div className="flex justify-between w-full">
