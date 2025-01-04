@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react'
 import React from 'react'
 import FundingCard from '@/components/FundingCard'
 import { Search } from 'lucide-react'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
+
 
 interface Author {
   username: string;
@@ -25,6 +28,8 @@ interface Project {
 }
 
 const ExplorePage = () => {
+  const { address } = useAccount()
+  //address variable is accessable here
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +44,6 @@ const ExplorePage = () => {
         }
         const data = await response.json()
         setProjects(data)
-        console.log(data)
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to fetch projects')
         console.error("Error fetching projects:", error)
@@ -55,7 +59,7 @@ const ExplorePage = () => {
     return (
       <div className="relative top-[3.5rem] min-h-screen">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-pulse text-xl">Loading projects...</div>
+          <div className="animate-pulse text-3xl">getting those innovations for you</div>
         </div>
       </div>
     )
@@ -76,6 +80,10 @@ const ExplorePage = () => {
       <h1 className="text-4xl font-bold my-6 mx-20 flex items-center">
         Explore <Search className="h-8 w-8 mx-2" />
       </h1>
+      <div className='ml-20'>
+
+      <ConnectButton label="Connect Your Wallet" chainStatus="icon"  showBalance={false} />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-20">
         {projects.map((project) => (
@@ -96,8 +104,8 @@ const ExplorePage = () => {
       </div>
 
       {projects.length === 0 && !isLoading && (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">No projects found.</p>
+        <div className="flex justify-center items-center h-72">
+          <p className="text-gray-500">quite empty innit?</p>
         </div>
       )}
     </div>
