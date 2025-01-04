@@ -1,3 +1,4 @@
+// FundingCard.tsx
 "use client";
 
 import { useState } from "react";
@@ -22,6 +23,12 @@ import {
 } from "@/components/ui/tooltip";
 import { Clipboard, Check } from "lucide-react";
 import Image from "next/image";
+
+interface Author {
+  username: string;
+  name: string;
+  photoURL: string;
+}
 
 interface ResearchFundingCardProps {
   key: number;

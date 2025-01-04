@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
             timeline: body.timeline || "",
             links: body.links || [],
             citations: body.citations || "",
+            designation: body.designation || "",
             goalAmount: body.goalAmount || 0,
             pdfs: body.pdfs || []
         };

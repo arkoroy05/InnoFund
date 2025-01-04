@@ -35,6 +35,9 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "Project name must be at least 2 characters.",
   }),
+  designation: z.string().min(1, {
+    message: "Project designation is required.",
+  }),
   about: z.string().min(10, {
     message: "About section must be at least 10 characters.",
   }),
@@ -93,6 +96,7 @@ export default function CreateProjectForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      designation: "",
       about: "",
       teamMembers: [""],
       timeline: new Date(),
@@ -177,6 +181,21 @@ export default function CreateProjectForm() {
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="designation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project Designation</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter project designation" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Rest of the form fields remain the same */}
           <FormField
             control={form.control}
             name="about"
