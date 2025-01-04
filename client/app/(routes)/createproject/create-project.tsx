@@ -460,7 +460,7 @@ export default function CreateProjectForm() {
             )}
           />
 
-          <div className="flex justify-end items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-2 mb-4"> {/* Corrected div */}
             <FormField
               control={form.control}
               name="isAnonymous"
@@ -478,9 +478,9 @@ export default function CreateProjectForm() {
                 </FormItem>
               )}
             />
-          </div>
+          </div> 
 
-          <Button type="submit"<Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full" disabled={isSubmitting}> {/* Corrected Button */}
             {isSubmitting ? "Publishing..." : "Publish Project"}
           </Button>
         </form>
