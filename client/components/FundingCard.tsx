@@ -134,7 +134,8 @@ export default function FundingCard({
   const router = useRouter();
   const Wallet= useAccount();
   const isWalletConnected = Wallet.isConnected  
-  
+
+
   return (
     <>
       <TooltipProvider>

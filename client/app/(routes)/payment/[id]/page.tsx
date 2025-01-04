@@ -10,11 +10,12 @@ import { AlertCircle, Wallet, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAccount } from 'wagmi';
 
-const PaymentPage = () => {
+const PaymentPage = ({ params }: { params: { id: string } }) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const Wallets= useAccount();
   const isWalletConnected = Wallets.isConnected  
+  const projectId = params.id
   
   const handlePayment = () => {
     setLoading(true);

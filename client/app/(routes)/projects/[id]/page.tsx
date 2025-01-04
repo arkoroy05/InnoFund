@@ -7,6 +7,8 @@ import { ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
 import { Team } from "@/components/Team";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
 
 interface ProjectData {
   name: string;
@@ -25,6 +27,15 @@ interface ProjectData {
 }
 
 const Page = ({ params }: { params: { id: string } }) => {
+  const router = useRouter();
+  const { isConnected: isWalletConnected } = useAccount();
+  const handleDonate = () => {
+    if (isWalletConnected) {
+      router.push(`/payment?projectId=${id}`); // Route to /payment with projectId
+    } else {
+      router.push("/login");
+    }
+  };
   const [data, setData] = useState<ProjectData | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
