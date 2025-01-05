@@ -10,8 +10,10 @@ import {
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
+import { toast } from "react-toastify";
 import CustomConnectButton from "@/components/CustomConnect";
+
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -30,6 +32,8 @@ const NavBar = () => {
   const auth = getAuth(firebaseApp);
   const db = getFirestore(firebaseApp);
   const router = useRouter();
+  const { isConnected } = useAccount();
+  const canPost = isConnected;
   const handleGithubSignIn = async () => {
     const provider = new GithubAuthProvider();
   
@@ -61,6 +65,7 @@ const NavBar = () => {
       console.error("Error signing in with GitHub:", error);
     }
   };
+
   const unprotectedlinks = [{ name: "Home", href: "/", searchHref: "/" }];
   const protectedlinks = [
     { name: "Explore", href: "/explore", searchHref: "/explore" },
@@ -83,15 +88,22 @@ const NavBar = () => {
     return () => unsubscribe(); // Unsubscribe when component unmounts
   }, []);
 
-  // Get current path from window location
   const currentPath = usePathname();
 
   const isActive = (itemLink: string) => {
-    // Exact match for root, starts with for other paths
     return itemLink === "/"
       ? currentPath === itemLink
       : currentPath.startsWith(itemLink) || currentPath === itemLink;
   };
+
+  const handleClick = (href: string) => {
+    if (href === "/createproject" && !canPost) {
+      toast.error("Please connect your wallet to create a project.");
+    } else {
+      router.push(href);
+    }
+  };
+
 
   return (
     <div className="fixed left-0 top-0 w-full h-[3.5rem]  backdrop-blur-[20rem] z-[99] flex items-center justify-between p-2 pl-3 border-b border-neutral-800/20">
@@ -105,9 +117,10 @@ const NavBar = () => {
         {links.map((item) => (
           <a
             key={item.href}
-            href={item.href}
+            href="#"
+            onClick={() => handleClick(item.href)}
             className={`
-              text-l font-light
+              text-l font-light cursor-pointer
               ${
                 isActive(item.searchHref)
                   ? "text-primary"
@@ -136,3 +149,4 @@ const NavBar = () => {
 };
 
 export default NavBar;
+
