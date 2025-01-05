@@ -8,7 +8,7 @@ import * as z from "zod";
 import { CalendarIcon, PlusCircle, X, Link, UserRoundPlus } from 'lucide-react';
 import { format } from "date-fns";
 import axios from "axios";
-
+import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,11 +88,13 @@ export default function CreateProjectForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const {address}=useAccount();
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserId(user.uid);
+        console.log("User ID:", user.uid);
+        console.log("wallet address:",address);
       } else {
         router.push("/login");
       }
@@ -149,6 +151,7 @@ export default function CreateProjectForm() {
       };
 
       await axios.post("/api/projects", requestBody);
+      await axios.put("/api/profile",{walletAddress:address,uid:user.uid});
       router.push("/explore");
       router.refresh();
     } catch (error) {

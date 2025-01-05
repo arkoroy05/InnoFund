@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, getApps } from "firebase/app";
-import { getDatabase, ref, get,remove } from "firebase/database";
+import { getDatabase, ref, get,remove,update } from "firebase/database";
 import { da } from "date-fns/locale";
 
 const firebaseConfig = {
@@ -90,5 +90,25 @@ export async function DELETE(request: NextRequest) {
       error: 'Error deleting project',
       details: error.message 
     }, { status: 500 });
+  }
+}
+
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { walletAddress, uid } = await request.json();
+
+    if (!walletAddress || !uid) {
+      return NextResponse.json({ error: 'Missing walletAddress or uid' }, { status: 400 });
+    }
+
+    const userRef = ref(db, `users/${uid}`);
+    await update(userRef, { walletAddress: walletAddress });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return NextResponse.json({ error: 'Error updating user data' }, { status: 500 });
   }
 }
