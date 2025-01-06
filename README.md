@@ -1,5 +1,5 @@
 # Innofund
-Innofund is a web3 based DeFi application for research papers. It's a platform that allows researchers to raise funds for their research projects in a decentralized manner.
+Innofund is a web3 based DeSci application for research papers. It's a platform that allows researchers to raise funds for their research projects in a decentralized manner.
 
 ## Features
 - Create and manage research projects

@@ -7,7 +7,7 @@ import ProjectCard from "@/components/Project-Card";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get, child } from "firebase/database";
-import { toast } from "@/components/ui/toast";
+import { Toast } from "@/components/ui/toast";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import AnimatedGradientText from "@/components/ui/gradient-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -104,7 +104,7 @@ export default function ProfilePage() {
         setUserProjects((prevProjects) =>
           prevProjects.filter((project) => project.id !== projectId)
         );
-        toast({
+        Toast({
           title: "Success",
           description: "Project successfully deleted",
           variant: "default",
@@ -114,7 +114,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error deleting project:", error);
-      toast({
+      Toast({
         title: "Error",
         description: "Failed to delete project. Please try again.",
         variant: "destructive",

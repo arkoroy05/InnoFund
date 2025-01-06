@@ -7,7 +7,6 @@ import { getAuth, signInWithPopup, GithubAuthProvider} from 'firebase/auth';
 import { useRouter } from 'next/navigation'
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import Router from "next/router";
 
 const Scene = dynamic(() => import("@/components/Canvas"), { ssr: false });
 const ThreeEnabled = true;
