@@ -36,22 +36,49 @@ export default function ProfilePage() {
   const auth = getAuth();
   const earnings = 20;
   const router = useRouter();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        console.log('Firebase Auth User:', user);
         setCurrentUser(user);
-        // Add these logs
-        console.log("Current user:", user);
-        const response = await fetch(`/api/profile?uid=${user.uid}`);
-        const data = await response.json();
-        console.log("API response data:", data);
-        setUserProjects(data.projects || []);
-        console.log("Projects after setting state:", data.projects);
+
+        // First, check user's projects in Firebase directly
+        const userProjectsRef = ref(db, `users/${user.uid}/projects`);
+        const userProjectsSnapshot = await get(userProjectsRef);
+        console.log('Firebase User Projects Snapshot:', userProjectsSnapshot.val());
+
+        // Then make the API call
+        try {
+          const response = await fetch(`/api/profile?uid=${user.uid}`);
+          console.log('API Response Status:', response.status);
+          const data = await response.json();
+          console.log('API Response Data:', data);
+          
+          if (data.projects) {
+            setUserProjects(data.projects);
+            console.log('Set User Projects:', data.projects);
+          } else {
+            console.log('No projects found in API response');
+            setUserProjects([]);
+          }
+        } catch (error) {
+          console.error('Error fetching projects:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to fetch your projects. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        console.log('No user logged in');
+        setCurrentUser(null);
+        setUserProjects([]);
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth, db]);
 
   const handleProjectDelete = async (projectId: number) => {
     if (!currentUser || isDeletingProject) return;
@@ -134,7 +161,7 @@ export default function ProfilePage() {
             <Button variant={"outline"} className="text-sm bg-transparent" onClick={() => router.push('/createproject')}>
               <Plus className="h-4 w-4" />
                   Create Project
-            </Button>              
+            </Button>　　 　 　 　
           </header>
           <main className="space-y-6 p-10 pt-0 flex flex-col ">
             {userProjects.length > 0 ? (
