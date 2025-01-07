@@ -5,8 +5,8 @@ import { formatDate } from "@/lib/utils";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import ProjectCard from "@/components/Project-Card";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, get, child } from "firebase/database";
+import { db, auth } from "@/lib/firebase";
+import { ref, get, child } from "firebase/database";
 import { Toast } from "@/components/ui/toast";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import AnimatedGradientText from "@/components/ui/gradient-text";
@@ -14,28 +14,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-};
-
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
+import { User } from "firebase/auth";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ProfilePage() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProjects, setUserProjects] = useState([]);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
-  const auth = getAuth();
-  const earnings = 20;
-  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -161,7 +148,7 @@ export default function ProfilePage() {
             <Button variant={"outline"} className="text-sm bg-transparent" onClick={() => router.push('/createproject')}>
               <Plus className="h-4 w-4" />
                   Create Project
-            </Button>　　 　 　 　
+            </Button>
           </header>
           <main className="space-y-6 p-10 pt-0 flex flex-col ">
             {userProjects.length > 0 ? (
