@@ -6,6 +6,7 @@ import {
   signInWithPopup,
   GithubAuthProvider,
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
@@ -63,6 +64,16 @@ const NavBar = () => {
       router.push("/explore");
     } catch (error) {
       console.error("Error signing in with GitHub:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/"); // Redirect to home after logout
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Error signing out. Please try again.");
     }
   };
 
@@ -134,6 +145,12 @@ const NavBar = () => {
         {user ? (
           <>
             <CustomConnectButton />
+            <button
+              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 text-white rounded-full font-light"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
           </>
         ) : (
           <button
