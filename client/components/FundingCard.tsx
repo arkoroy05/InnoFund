@@ -25,6 +25,10 @@ import { Clipboard, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
+import { ContributeButton } from '@/components/web3/ContributeButton'
+import { TokenBalance } from '@/components/web3/TokenBalance'
+import { CreateProposalDialog } from '@/components/web3/CreateProposalDialog'
+import { ProposalList } from '@/components/web3/ProposalList'
 
 interface Author {
   username: string;
@@ -245,6 +249,16 @@ export default function FundingCard({
                     {goalFunding.toLocaleString()} AVAX
                   </span>
                 </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <ContributeButton projectId={id} onSuccess={() => router.refresh()} />
+                <TokenBalance />
+              </div>
+              <div className="mt-4">
+                <CreateProposalDialog projectId={id} />
+              </div>
+              <div className="mt-6">
+                <ProposalList projectId={id} />
               </div>
               <Tooltip>
                 <TooltipTrigger className="w-full">
