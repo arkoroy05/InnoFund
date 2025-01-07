@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useWriteContract, useWatchContractEvent } from 'wagmi'
-import { PROJECT_DAO_ABI, PROJECT_DAO_ADDRESS } from '@/lib/contracts'
+import { useWriteContract, useWatchContractEvent, useAccount, useReadContract } from 'wagmi'
+import { PROJECT_DAO_ABI, PROJECT_DAO_ADDRESS, REWARD_TOKEN_ABI, REWARD_TOKEN_ADDRESS } from '@/lib/contracts'
 import { useToast } from '@/components/ui/use-toast'
+import { parseEther } from 'viem'
 
 interface CreateProposalDialogProps {
   projectId: string
@@ -20,8 +21,17 @@ export function CreateProposalDialog({ projectId }: CreateProposalDialogProps) {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<string>('GENERAL')
   const { toast } = useToast()
+  const { address } = useAccount()
 
   const { writeContract, isError, isPending, isSuccess } = useWriteContract()
+
+  // Read user's token balance
+  const { data: tokenBalance } = useReadContract({
+    address: REWARD_TOKEN_ADDRESS,
+    abi: REWARD_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: [address],
+  })
 
   // Watch for the ProposalCreated event
   useWatchContractEvent({
@@ -32,7 +42,7 @@ export function CreateProposalDialog({ projectId }: CreateProposalDialogProps) {
       console.log('New proposal created:', logs)
       toast({
         title: 'Success!',
-        description: 'Your proposal has been created.',
+        description: 'Your proposal has been created. Voting will start after a short delay.',
       })
       setOpen(false)
       setTitle('')
@@ -43,13 +53,52 @@ export function CreateProposalDialog({ projectId }: CreateProposalDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!address) {
+      toast({
+        title: 'Error',
+        description: 'Please connect your wallet first.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!tokenBalance || tokenBalance === BigInt(0)) {
+      toast({
+        title: 'Error',
+        description: 'You need to hold reward tokens to create a proposal.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!title || !description) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all fields.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const proposalDescription = `${title}\n\n${description}`
     
     try {
+      // Create an empty proposal since we're just doing polls
+      const targets: `0x${string}`[] = []
+      const values: bigint[] = []
+      const calldatas: `0x${string}`[] = []
+
       await writeContract({
         address: PROJECT_DAO_ADDRESS,
         abi: PROJECT_DAO_ABI,
-        functionName: 'createProposal',
-        args: [BigInt(projectId), description, category],
+        functionName: 'propose',
+        args: [targets, values, calldatas, proposalDescription],
+      })
+
+      toast({
+        title: 'Creating Proposal',
+        description: 'Please wait while your proposal is being created...',
       })
     } catch (error) {
       console.error('Failed to create proposal:', error)
@@ -64,11 +113,11 @@ export function CreateProposalDialog({ projectId }: CreateProposalDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Create Proposal</Button>
+        <Button variant="outline">Create Poll</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create a New Proposal</DialogTitle>
+          <DialogTitle>Create a New Poll</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -94,20 +143,15 @@ export function CreateProposalDialog({ projectId }: CreateProposalDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="GENERAL">General</SelectItem>
-                <SelectItem value="TECHNICAL">Technical</SelectItem>
-                <SelectItem value="COMMUNITY">Community</SelectItem>
-                <SelectItem value="FINANCIAL">Financial</SelectItem>
+                <SelectItem value="FUND_ALLOCATION">Fund Allocation</SelectItem>
+                <SelectItem value="RESEARCH_DIRECTION">Research Direction</SelectItem>
+                <SelectItem value="EMERGENCY">Emergency</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Creating...' : 'Create Proposal'}
-            </Button>
-          </div>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? 'Creating...' : 'Create Poll'}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

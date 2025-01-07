@@ -3,72 +3,77 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./RewardToken.sol";
 import "./ProjectDAO.sol";
 
 contract FundingContract is Ownable {
+    using SafeCast for uint256;
+    
     struct Project {
         string name;
         string description;
         address payable creator;
-        uint256 fundingGoal;
-        uint256 currentFunding;
-        uint256 deadline;
+        uint96 fundingGoal;    // Reduce from uint256 (max ~79K ETH is enough)
+        uint96 currentFunding; // Reduce from uint256
+        uint32 deadline;       // Reduce from uint256 (timestamp until 2106 is enough)
         bool funded;
         bool exists;
     }
 
     struct Contribution {
-        uint256 amount;
-        uint256 timestamp;
+        uint96 amount;   // Reduce from uint256
+        uint32 timestamp; // Reduce from uint256
     }
 
-    RewardToken public rewardToken;
-    ProjectDAO public projectDAO;
+    RewardToken public immutable rewardToken;
+    ProjectDAO public immutable projectDAO;
     
     mapping(uint256 => Project) public projects;
     mapping(uint256 => mapping(address => Contribution[])) public contributions;
     mapping(uint256 => address[]) public projectContributors;
     
-    uint256 public nextProjectId;
-    uint256 public constant MIN_FUNDING_GOAL = 0.1 ether;
-    uint256 public constant MAX_FUNDING_PERIOD = 30 days;
-    uint256 public constant TOKEN_REWARD_RATE = 100; // tokens per ETH contributed
+    uint256 private nextProjectId;
+    
+    // Constants - reduced for testing
+    uint96 public constant MIN_FUNDING_GOAL = 0.01 ether;
+    uint32 public constant MAX_FUNDING_PERIOD = 1 days;
+    uint96 public constant TOKEN_REWARD_RATE = 100; // tokens per ETH contributed
     
     event ProjectCreated(
         uint256 indexed projectId,
         string name,
         address indexed creator,
-        uint256 fundingGoal,
-        uint256 deadline
+        uint96 fundingGoal,
+        uint32 deadline
     );
     
     event ContributionMade(
         uint256 indexed projectId,
         address indexed contributor,
-        uint256 amount,
-        uint256 timestamp
+        uint96 amount,
+        uint32 timestamp
     );
     
-    event ProjectFunded(uint256 indexed projectId, uint256 totalAmount);
-    event FundsWithdrawn(uint256 indexed projectId, address indexed creator, uint256 amount);
+    event ProjectFunded(uint256 indexed projectId, uint96 totalAmount);
+    event FundsWithdrawn(uint256 indexed projectId, address indexed creator, uint96 amount);
     
     constructor(address _rewardToken, address _projectDAO) {
         rewardToken = RewardToken(_rewardToken);
-        projectDAO = ProjectDAO(payable(_projectDAO));
+        projectDAO = ProjectDAO(_projectDAO);
     }
     
     function createProject(
-        string memory _name,
-        string memory _description,
-        uint256 _fundingGoal,
-        uint256 _duration
+        string calldata _name,
+        string calldata _description,
+        uint96 _fundingGoal,
+        uint32 _duration
     ) external returns (uint256) {
-        require(_fundingGoal >= MIN_FUNDING_GOAL, "Funding goal too low");
-        require(_duration <= MAX_FUNDING_PERIOD, "Duration too long");
+        require(_fundingGoal >= MIN_FUNDING_GOAL, "Goal < min");
+        require(_duration <= MAX_FUNDING_PERIOD, "Duration > max");
         
         uint256 projectId = nextProjectId++;
-        uint256 deadline = block.timestamp + _duration;
+        uint32 deadline = uint32(block.timestamp + _duration);
         
         projects[projectId] = Project({
             name: _name,
@@ -87,16 +92,17 @@ contract FundingContract is Ownable {
     
     function contribute(uint256 _projectId) external payable {
         Project storage project = projects[_projectId];
-        require(project.exists, "Project does not exist");
-        require(block.timestamp < project.deadline, "Project funding period ended");
-        require(msg.value > 0, "Contribution must be greater than 0");
+        require(project.exists, "Not found");
+        require(block.timestamp < project.deadline, "Ended");
+        require(msg.value > 0, "Zero value");
         
-        project.currentFunding += msg.value;
+        uint96 amount = uint96(msg.value);
+        project.currentFunding += amount;
         
         // Record contribution
         contributions[_projectId][msg.sender].push(Contribution({
-            amount: msg.value,
-            timestamp: block.timestamp
+            amount: amount,
+            timestamp: uint32(block.timestamp)
         }));
         
         // Add to contributors list if first contribution
@@ -105,16 +111,16 @@ contract FundingContract is Ownable {
         }
         
         // Mint reward tokens
-        uint256 tokenReward = (msg.value * TOKEN_REWARD_RATE) / 1 ether;
-        rewardToken.mint(msg.sender, tokenReward);
+        uint96 tokenAmount = (amount * TOKEN_REWARD_RATE) / 1 ether;
+        rewardToken.mint(msg.sender, tokenAmount);
         
-        emit ContributionMade(_projectId, msg.sender, msg.value, block.timestamp);
-        
-        // Check if project is fully funded
-        if (project.currentFunding >= project.fundingGoal) {
+        // Check if project is now funded
+        if (project.currentFunding >= project.fundingGoal && !project.funded) {
             project.funded = true;
             emit ProjectFunded(_projectId, project.currentFunding);
         }
+        
+        emit ContributionMade(_projectId, msg.sender, amount, uint32(block.timestamp));
     }
     
     function createProposal(uint256 _projectId, string memory _description) external {
@@ -147,14 +153,14 @@ contract FundingContract is Ownable {
     
     function withdrawFunds(uint256 _projectId) external {
         Project storage project = projects[_projectId];
-        require(project.exists, "Project does not exist");
-        require(project.funded, "Project not funded");
-        require(msg.sender == project.creator, "Only creator can withdraw");
+        require(project.exists, "Not found");
+        require(project.funded, "Not funded");
+        require(msg.sender == project.creator, "Not creator");
         
-        uint256 amount = project.currentFunding;
+        uint96 amount = project.currentFunding;
         project.currentFunding = 0;
+        project.creator.transfer(amount);
         
-        payable(project.creator).transfer(amount);
         emit FundsWithdrawn(_projectId, msg.sender, amount);
     }
     
@@ -162,9 +168,9 @@ contract FundingContract is Ownable {
         string memory name,
         string memory description,
         address creator,
-        uint256 fundingGoal,
-        uint256 currentFunding,
-        uint256 deadline,
+        uint96 fundingGoal,
+        uint96 currentFunding,
+        uint32 deadline,
         bool funded,
         bool exists
     ) {
@@ -181,11 +187,11 @@ contract FundingContract is Ownable {
         );
     }
     
-    function getContributors(uint256 _projectId) external view returns (address[] memory) {
-        return projectContributors[_projectId];
-    }
-    
     function getContributions(uint256 _projectId, address _contributor) external view returns (Contribution[] memory) {
         return contributions[_projectId][_contributor];
+    }
+    
+    function getContributors(uint256 _projectId) external view returns (address[] memory) {
+        return projectContributors[_projectId];
     }
 }

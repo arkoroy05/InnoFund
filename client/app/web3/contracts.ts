@@ -16,10 +16,10 @@ export const contractAddresses: ChainConfig = {
     projectDAO: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     fundingContract: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
   },
-  // Add Fuji testnet addresses when deployed
+  // Fuji testnet addresses
   43113: {
-    rewardToken: '0x0000000000000000000000000000000000000000',
-    projectDAO: '0x0000000000000000000000000000000000000000',
-    fundingContract: '0x0000000000000000000000000000000000000000',
+    rewardToken: '0xA68b3808DCf0Fd8630640018fCB96a28f497F504',
+    projectDAO: '0x310BE1F533FFE873743A00aCBB69c22C980c2ECc',
+    fundingContract: '0xdC13a4eD2717a7b1E0dE2E55beF927c291A4fA0e',
   },
 }
