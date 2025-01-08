@@ -2,13 +2,12 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./RewardToken.sol";
-import "./ProjectDAO.sol";
+import "./interfaces/IProjectDAO.sol";
 
 contract FundingContract is Ownable {
-    using SafeCast for uint256;
+    using SafeMath for uint256;
     
     struct Project {
         string name;
@@ -27,7 +26,7 @@ contract FundingContract is Ownable {
     }
 
     RewardToken public immutable rewardToken;
-    ProjectDAO public immutable projectDAO;
+    address public immutable projectDAO;
     
     mapping(uint256 => Project) public projects;
     mapping(uint256 => mapping(address => Contribution[])) public contributions;
@@ -60,7 +59,7 @@ contract FundingContract is Ownable {
     
     constructor(address _rewardToken, address _projectDAO) {
         rewardToken = RewardToken(_rewardToken);
-        projectDAO = ProjectDAO(_projectDAO);
+        projectDAO = _projectDAO;
     }
     
     function createProject(
@@ -128,10 +127,10 @@ contract FundingContract is Ownable {
         require(project.exists, "Project does not exist");
         require(project.funded, "Project not funded");
         
-        uint256 proposalId = projectDAO.createProjectProposal(
+        uint256 proposalId = IProjectDAO(projectDAO).createProjectProposal(
             _projectId,
             _description,
-            ProjectDAO.ProposalCategory.GENERAL
+            IProjectDAO.ProposalCategory.GENERAL
         );
         
         require(proposalId > 0, "Failed to create proposal");
@@ -145,7 +144,7 @@ contract FundingContract is Ownable {
         Project storage project = projects[_projectId];
         require(project.exists, "Project does not exist");
         
-        uint256 proposalId = projectDAO.getProjectProposal(_projectId);
+        uint256 proposalId = IProjectDAO(projectDAO).getProjectProposal(_projectId);
         require(proposalId > 0, "No proposal exists for project");
         
         return (0, 0, 0); // Placeholder - implement actual vote counting
@@ -159,9 +158,10 @@ contract FundingContract is Ownable {
         
         uint96 amount = project.currentFunding;
         project.currentFunding = 0;
-        project.creator.transfer(amount);
+        (bool success, ) = payable(project.creator).call{value: amount}("");
+        require(success, "Transfer failed");
         
-        emit FundsWithdrawn(_projectId, msg.sender, amount);
+        emit FundsWithdrawn(_projectId, project.creator, amount);
     }
     
     function getProject(uint256 _projectId) external view returns (

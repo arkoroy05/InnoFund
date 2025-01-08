@@ -9,27 +9,36 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import "./FundingContract.sol";
 import "./RewardToken.sol";
 
-contract ProjectDAO is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction {
+contract ProjectDAO is
+    Governor,
+    GovernorSettings,
+    GovernorCountingSimple,
+    GovernorVotes,
+    GovernorVotesQuorumFraction
+{
     using SafeCast for uint256;
     
-    FundingContract public immutable fundingContract;
-    RewardToken public immutable rewardToken;
+    FundingContract public fundingContract;
+    RewardToken public rewardToken;
+    bool public initialized;
     
-    uint8 private constant CATEGORY_GENERAL = 0;
-    uint8 private constant CATEGORY_FUND_ALLOCATION = 1;
-    uint8 private constant CATEGORY_RESEARCH_DIRECTION = 2;
-    uint8 private constant CATEGORY_EMERGENCY = 3;
-    
+    enum ProposalCategory {
+        GENERAL,
+        FUND_ALLOCATION,
+        RESEARCH_DIRECTION,
+        EMERGENCY
+    }
+
     struct ProposalDetails {
-        uint8 category;        // Use uint8 instead of enum (saves gas)
-        uint32 requiredQuorum; // Reduce from uint256 to uint32
-        uint32 proposalDelay;  // Reduce from uint256 to uint32
-        uint32 proposalPeriod; // Reduce from uint256 to uint32
+        ProposalCategory category;
+        uint32 requiredQuorum;
+        uint32 proposalDelay;
+        uint32 proposalPeriod;
     }
     
     mapping(uint256 => ProposalDetails) public proposalDetails;
     mapping(uint256 => uint256) public projectProposals; // projectId => proposalId
-    
+
     event ProposalCreated(
         uint256 indexed projectId,
         uint256 indexed proposalId,
@@ -37,26 +46,28 @@ contract ProjectDAO is Governor, GovernorSettings, GovernorCountingSimple, Gover
         uint32 deadline
     );
 
-    constructor(
-        address _fundingContract,
-        address _rewardToken
-    )
+    constructor(address _token)
         Governor("InnoFund DAO")
         GovernorSettings(1, /* 1 block voting delay */ 20, /* ~3 min voting period */ 0)
-        GovernorVotes(IVotes(_rewardToken))
+        GovernorVotes(IVotes(_token))
         GovernorVotesQuorumFraction(4) // 4% quorum
     {
+        rewardToken = RewardToken(_token);
+    }
+
+    function setFundingContract(address _fundingContract) external {
+        require(!initialized, "Already initialized");
         fundingContract = FundingContract(_fundingContract);
-        rewardToken = RewardToken(_rewardToken);
+        initialized = true;
     }
 
     function createProjectProposal(
         uint256 projectId,
         string calldata description,
-        uint8 category
+        ProposalCategory category
     ) external returns (uint256) {
+        require(initialized, "Not initialized");
         require(rewardToken.balanceOf(msg.sender) >= proposalThreshold(), "Insufficient tokens");
-        require(category <= CATEGORY_EMERGENCY, "Invalid category");
         
         address[] memory targets = new address[](0);
         uint256[] memory values = new uint256[](0);
@@ -69,11 +80,11 @@ contract ProjectDAO is Governor, GovernorSettings, GovernorCountingSimple, Gover
         uint32 proposalDelay;
         uint32 proposalPeriod;
         
-        if (category == CATEGORY_EMERGENCY) {
+        if (category == ProposalCategory.EMERGENCY) {
             requiredQuorum = 10; // 10% quorum
             proposalDelay = 1;   // 1 block
             proposalPeriod = 10; // ~1.5 min
-        } else if (category == CATEGORY_FUND_ALLOCATION) {
+        } else if (category == ProposalCategory.FUND_ALLOCATION) {
             requiredQuorum = 30; // 30% quorum
             proposalDelay = 5;   // ~45 sec
             proposalPeriod = 20; // ~3 min
@@ -106,24 +117,49 @@ contract ProjectDAO is Governor, GovernorSettings, GovernorCountingSimple, Gover
         return projectProposals[projectId];
     }
 
-    function votingDelay() public view override returns (uint256) {
-        return 1; // 1 block
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public override(Governor) returns (uint256) {
+        return super.propose(targets, values, calldatas, description);
     }
 
-    function votingPeriod() public view override returns (uint256) {
-        return 20; // ~3 min
+    function votingDelay()
+        public
+        view
+        override(IGovernor, GovernorSettings)
+        returns (uint256)
+    {
+        return super.votingDelay();
     }
 
-    function quorum(uint256 blockNumber) public view override returns (uint256) {
-        return (super.quorum(blockNumber) * getProposalDetails(state(blockNumber).requiredQuorum)) / 100;
+    function votingPeriod()
+        public
+        view
+        override(IGovernor, GovernorSettings)
+        returns (uint256)
+    {
+        return super.votingPeriod();
     }
 
-    function getProposalDetails(uint256 proposalId) public view returns (ProposalDetails memory) {
-        return proposalDetails[proposalId];
+    function quorum(uint256 blockNumber)
+        public
+        view
+        override(IGovernor, GovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return super.quorum(blockNumber);
     }
 
-    function proposalThreshold() public pure override returns (uint256) {
-        return 0; // No threshold for testing
+    function proposalThreshold()
+        public
+        view
+        override(Governor, GovernorSettings)
+        returns (uint256)
+    {
+        return super.proposalThreshold();
     }
 
     function _getVotes(
@@ -146,22 +182,10 @@ contract ProjectDAO is Governor, GovernorSettings, GovernorCountingSimple, Gover
     }
 
     // Required overrides
-    function state(uint256 proposalId)
-        public
-        view
-        override(Governor)
-        returns (ProposalState)
-    {
+    function state(
+        uint256 proposalId
+    ) public view override(Governor) returns (ProposalState) {
         return super.state(proposalId);
-    }
-
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public override(Governor) returns (uint256) {
-        return super.propose(targets, values, calldatas, description);
     }
 
     function _execute(

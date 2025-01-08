@@ -8,80 +8,58 @@ async function main() {
   console.log("Deploying RewardToken...");
   const RewardToken = await hre.ethers.getContractFactory("RewardToken");
   const rewardToken = await RewardToken.deploy("InnoFund Token");
-  await rewardToken.waitForDeployment();
-  console.log("RewardToken deployed to:", await rewardToken.getAddress());
+  await rewardToken.deployed();
+  console.log("RewardToken deployed to:", rewardToken.address);
+
+  // Deploy ProjectDAO with RewardToken
+  console.log("Deploying ProjectDAO...");
+  const ProjectDAO = await hre.ethers.getContractFactory("ProjectDAO");
+  const projectDAO = await ProjectDAO.deploy(rewardToken.address);
+  await projectDAO.deployed();
+  console.log("ProjectDAO deployed to:", projectDAO.address);
 
   // Deploy FundingContract
   console.log("Deploying FundingContract...");
   const FundingContract = await hre.ethers.getContractFactory("FundingContract");
-  const fundingContract = await FundingContract.deploy(await rewardToken.getAddress());
-  await fundingContract.waitForDeployment();
-  console.log("FundingContract deployed to:", await fundingContract.getAddress());
-
-  // Deploy ProjectDAO
-  console.log("Deploying ProjectDAO...");
-  const ProjectDAO = await hre.ethers.getContractFactory("ProjectDAO");
-  const projectDAO = await ProjectDAO.deploy(
-    await fundingContract.getAddress(),
-    await rewardToken.getAddress()
+  const fundingContract = await FundingContract.deploy(
+    rewardToken.address,
+    projectDAO.address
   );
-  await projectDAO.waitForDeployment();
-  console.log("ProjectDAO deployed to:", await projectDAO.getAddress());
+  await fundingContract.deployed();
+  console.log("FundingContract deployed to:", fundingContract.address);
+
+  // Set FundingContract in ProjectDAO
+  console.log("Setting FundingContract in ProjectDAO...");
+  await projectDAO.setFundingContract(fundingContract.address);
+  console.log("FundingContract set in ProjectDAO");
 
   // Set up permissions
   console.log("Setting up permissions...");
-  await rewardToken.transferOwnership(await fundingContract.getAddress());
+  await rewardToken.transferOwnership(fundingContract.address);
   console.log("Transferred RewardToken ownership to FundingContract");
-
-  // Verify contracts on Snowtrace
-  if (hre.network.name !== "hardhat" && hre.network.name !== "localhost") {
-    console.log("Waiting for block confirmations...");
-    
-    console.log("Verifying contracts on Snowtrace...");
-    try {
-      await hre.run("verify:verify", {
-        address: await rewardToken.getAddress(),
-        constructorArguments: ["InnoFund Token"],
-      });
-    } catch (error) {
-      console.log("Error verifying RewardToken:", error.message);
-    }
-
-    try {
-      await hre.run("verify:verify", {
-        address: await fundingContract.getAddress(),
-        constructorArguments: [await rewardToken.getAddress()],
-      });
-    } catch (error) {
-      console.log("Error verifying FundingContract:", error.message);
-    }
-
-    try {
-      await hre.run("verify:verify", {
-        address: await projectDAO.getAddress(),
-        constructorArguments: [
-          await fundingContract.getAddress(),
-          await rewardToken.getAddress(),
-        ],
-      });
-    } catch (error) {
-      console.log("Error verifying ProjectDAO:", error.message);
-    }
-  }
 
   // Save contract addresses
   const fs = require("fs");
   const contractAddresses = {
-    rewardToken: await rewardToken.getAddress(),
-    fundingContract: await fundingContract.getAddress(),
-    projectDAO: await projectDAO.getAddress(),
+    rewardToken: rewardToken.address,
+    projectDAO: projectDAO.address,
+    fundingContract: fundingContract.address,
   };
 
+  // Save to both web3 and client directories
   fs.writeFileSync(
     "contract-addresses.json",
     JSON.stringify(contractAddresses, null, 2)
   );
-  console.log("Contract addresses saved to contract-addresses.json");
+  
+  // Also save to client directory for frontend
+  const clientPath = "../client/src/contracts/addresses.json";
+  fs.writeFileSync(
+    clientPath,
+    JSON.stringify(contractAddresses, null, 2)
+  );
+  
+  console.log("Contract addresses saved to contract-addresses.json and client/src/contracts/addresses.json");
 }
 
 main()
