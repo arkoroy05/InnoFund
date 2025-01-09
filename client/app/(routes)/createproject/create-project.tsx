@@ -151,7 +151,7 @@ export default function CreateProjectForm() {
       };
 
       await axios.post("/api/projects", requestBody);
-      await axios.put("/api/profile",{walletAddress:address,uid:user.uid});
+      await axios.put("/api/profile",{walletAddress:address,uid:userId});
       router.push("/explore");
       router.refresh();
     } catch (error) {
