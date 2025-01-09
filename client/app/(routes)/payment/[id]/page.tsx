@@ -45,7 +45,7 @@ const PaymentPage = ({ params }: { params: { id: string } }) => {
   const handlePayment = () => {
     setLoading(true);
     console.log('Payment initiated for project:', projectId);
-    console.log(auth.currentUser.uid)
+    console.log(auth.currentUser?.uid)
     setTimeout(() => setLoading(false), 2000);
   };
 
