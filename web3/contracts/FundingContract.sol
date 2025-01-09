@@ -27,6 +27,8 @@ contract FundingContract is Ownable {
 
     RewardToken public immutable rewardToken;
     address public immutable projectDAO;
+    address public platformFeeAddress;
+    uint256 public platformFeePercentage = 275; // 2.75% (275/10000)
     
     mapping(uint256 => Project) public projects;
     mapping(uint256 => mapping(address => Contribution[])) public contributions;
@@ -56,10 +58,12 @@ contract FundingContract is Ownable {
     
     event ProjectFunded(uint256 indexed projectId, uint96 totalAmount);
     event FundsWithdrawn(uint256 indexed projectId, address indexed creator, uint96 amount);
+    event PlatformFeeCollected(uint256 indexed projectId, uint96 amount);
     
     constructor(address _rewardToken, address _projectDAO) {
         rewardToken = RewardToken(_rewardToken);
         projectDAO = _projectDAO;
+        platformFeeAddress = 0xe87758C6CCcf3806C9f1f0C8F99f6Dcae36E5449;
     }
     
     function createProject(
@@ -96,7 +100,20 @@ contract FundingContract is Ownable {
         require(msg.value > 0, "Zero value");
         
         uint96 amount = uint96(msg.value);
-        project.currentFunding += amount;
+        
+        // Calculate platform fee
+        uint96 platformFee = uint96((uint256(amount) * platformFeePercentage) / 10000);
+        uint96 projectAmount = amount - platformFee;
+        
+        // Send platform fee
+        (bool feeSuccess, ) = payable(platformFeeAddress).call{value: platformFee}("");
+        require(feeSuccess, "Fee transfer failed");
+        emit PlatformFeeCollected(_projectId, platformFee);
+        
+        // Send remaining amount to project
+        project.currentFunding += projectAmount;
+        (bool success, ) = project.creator.call{value: projectAmount}("");
+        require(success, "Transfer failed");
         
         // Record contribution
         contributions[_projectId][msg.sender].push(Contribution({
@@ -104,22 +121,22 @@ contract FundingContract is Ownable {
             timestamp: uint32(block.timestamp)
         }));
         
-        // Add to contributors list if first contribution
+        // Add contributor to list if first contribution
         if (contributions[_projectId][msg.sender].length == 1) {
             projectContributors[_projectId].push(msg.sender);
         }
         
         // Mint reward tokens
-        uint96 tokenAmount = (amount * TOKEN_REWARD_RATE) / 1 ether;
+        uint256 tokenAmount = uint256(amount) * TOKEN_REWARD_RATE;
         rewardToken.mint(msg.sender, tokenAmount);
         
-        // Check if project is now funded
+        emit ContributionMade(_projectId, msg.sender, amount, uint32(block.timestamp));
+        
+        // Check if funding goal is reached
         if (project.currentFunding >= project.fundingGoal && !project.funded) {
             project.funded = true;
             emit ProjectFunded(_projectId, project.currentFunding);
         }
-        
-        emit ContributionMade(_projectId, msg.sender, amount, uint32(block.timestamp));
     }
     
     function createProposal(uint256 _projectId, string memory _description) external {
