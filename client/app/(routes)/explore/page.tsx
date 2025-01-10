@@ -49,6 +49,7 @@ const ExplorePage = () => {
         }
         const data = await response.json()
         setProjects(data)
+        console.log("DATA :",data)
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to fetch projects')
         console.error("Error fetching projects:", error)
